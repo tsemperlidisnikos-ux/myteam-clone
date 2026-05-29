@@ -1,0 +1,96 @@
+/* === LAYOUT CONTAINER === */
+.layout-container {
+  display: flex;
+  height: 100vh;
+  background: #f3f4f6;
+  font-family: Arial, sans-serif;
+}
+
+/* === SIDEBAR === */
+.sidebar {
+  width: 240px;
+  background: #111827;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.club-label {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-bottom: 24px;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-btn {
+  padding: 8px 12px;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: transparent;
+  color: #d1d5db;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sidebar-btn:hover {
+  background: #1f2937;
+  color: white;
+}
+
+.sidebar-btn.logout {
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+/* === MENU === */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #d1d5db;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.menu-item:hover {
+  background: #1f2937;
+  color: white;
+}
+
+.menu-item.active {
+  background: #374151;
+  color: white;
+}
+
+/* Icon wrapper */
+.icon {
+  display: flex;
+  align-items: center;
+}
+
+/* === MAIN CONTENT === */
+.content {
+  flex: 1;
+  padding: 30px;
+}

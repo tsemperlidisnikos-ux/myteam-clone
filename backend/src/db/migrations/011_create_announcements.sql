@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS announcements (
+  id SERIAL PRIMARY KEY,
+  club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+  title VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
+  target_type VARCHAR(20) NOT NULL,
+  target_id INTEGER,
+  created_at TIMESTAMP DEFAULT NOW()
+);

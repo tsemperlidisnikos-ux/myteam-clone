@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS match_stats (
+  id SERIAL PRIMARY KEY,
+  match_id INTEGER NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
+  athlete_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  points INTEGER DEFAULT 0,
+  rebounds INTEGER DEFAULT 0,
+  assists INTEGER DEFAULT 0,
+  steals INTEGER DEFAULT 0,
+  blocks INTEGER DEFAULT 0,
+  turnovers INTEGER DEFAULT 0,
+  fouls INTEGER DEFAULT 0,
+  minutes_played INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (match_id, athlete_id)
+);

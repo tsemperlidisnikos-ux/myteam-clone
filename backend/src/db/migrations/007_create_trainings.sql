@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS trainings (
+  id SERIAL PRIMARY KEY,
+  club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  coach_id INTEGER NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+  date DATE NOT NULL,
+  start_time TIME,
+  end_time TIME,
+  location VARCHAR(255),
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
