@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
-import { requireClubId } from "../utils/club";
+import { requireClubId, isAdmin } from "../utils/club";
 import Modal from "../components/Modal";
 import "../styles/page.css";
 
@@ -101,9 +101,11 @@ export default function Teams() {
     <div>
       <div className="page-header">
         <h1>Teams</h1>
-        <button className="btn-primary" onClick={() => setShowAdd(true)}>
-          + Add Team
-        </button>
+        {isAdmin() && (
+          <button className="btn-primary" onClick={() => setShowAdd(true)}>
+            + Add Team
+          </button>
+        )}
       </div>
 
       <div className="page-toolbar">
@@ -145,20 +147,24 @@ export default function Teams() {
                       <Link to={`/teams/${t.id}`} className="btn-blue">
                         View
                       </Link>
-                      <button
-                        className="btn-blue"
-                        onClick={() => {
-                          setEditTeam(t);
-                          setTeamName(t.name);
-                          setCategory(t.category || "");
-                          setShowEdit(true);
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button className="btn-red" onClick={() => deleteTeam(t.id)}>
-                        Delete
-                      </button>
+                      {isAdmin() && (
+                        <>
+                          <button
+                            className="btn-blue"
+                            onClick={() => {
+                              setEditTeam(t);
+                              setTeamName(t.name);
+                              setCategory(t.category || "");
+                              setShowEdit(true);
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button className="btn-red" onClick={() => deleteTeam(t.id)}>
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}

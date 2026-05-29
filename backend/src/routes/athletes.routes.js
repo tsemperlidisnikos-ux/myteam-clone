@@ -10,6 +10,7 @@ import {
 
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { clubAccessMiddleware } from "../middleware/club.middleware.js";
+import { adminOnly } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ router.use("/:clubId", clubAccessMiddleware);
 router.get("/:clubId", getAthletes);
 
 // POST /athletes/:clubId
-router.post("/:clubId", createAthlete);
+router.post("/:clubId", adminOnly, createAthlete);
 
 // GET /athletes/:clubId/:athleteId/teams
 router.get("/:clubId/:athleteId/teams", getAthleteTeams);
@@ -35,6 +36,6 @@ router.get("/:clubId/:athleteId", getAthleteProfile);
 router.put("/:clubId/:athleteId", updateAthleteProfile);
 
 // DELETE /athletes/:clubId/:athleteId
-router.delete("/:clubId/:athleteId", deleteAthlete);
+router.delete("/:clubId/:athleteId", adminOnly, deleteAthlete);
 
 export default router;

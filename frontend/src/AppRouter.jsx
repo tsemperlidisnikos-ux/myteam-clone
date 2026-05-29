@@ -13,16 +13,31 @@ import Analytics from "./pages/Analytics";
 import TrainingDetail from "./pages/TrainingDetail";
 import TeamDetails from "./pages/TeamDetails";
 import AthleteProfile from "./pages/AthleteProfile";
+import MatchDetail from "./pages/MatchDetail";
+import Staff from "./pages/Staff";
 import Settings from "./pages/Settings";
 
 import MainLayout from "./layout/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 
 function withLayout(Page) {
   return (
     <ProtectedRoute>
       <MainLayout>
         <Page />
+      </MainLayout>
+    </ProtectedRoute>
+  );
+}
+
+function withAdminLayout(Page) {
+  return (
+    <ProtectedRoute>
+      <MainLayout>
+        <AdminRoute>
+          <Page />
+        </AdminRoute>
       </MainLayout>
     </ProtectedRoute>
   );
@@ -44,7 +59,9 @@ export default function AppRouter() {
         <Route path="/trainings" element={withLayout(Trainings)} />
         <Route path="/trainings/:trainingId" element={withLayout(TrainingDetail)} />
         <Route path="/settings" element={withLayout(Settings)} />
+        <Route path="/staff" element={withAdminLayout(Staff)} />
         <Route path="/matches" element={withLayout(Matches)} />
+        <Route path="/matches/:matchId" element={withLayout(MatchDetail)} />
         <Route path="/messages" element={withLayout(Messages)} />
         <Route path="/analytics" element={withLayout(Analytics)} />
       </Routes>

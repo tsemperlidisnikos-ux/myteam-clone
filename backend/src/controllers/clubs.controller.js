@@ -1,18 +1,12 @@
+import bcrypt from "bcrypt";
 import { pool } from "../db/pool.js";
 
-// GET club info
 export const getClub = async (req, res) => {
   const { clubId } = req.params;
-
-  const result = await pool.query(
-    `SELECT * FROM clubs WHERE id = $1`,
-    [clubId]
-  );
-
+  const result = await pool.query(`SELECT * FROM clubs WHERE id = $1`, [clubId]);
   res.json(result.rows[0]);
 };
 
-// UPDATE club info
 export const updateClub = async (req, res) => {
   const { clubId } = req.params;
   const { name, logo_url, primary_color, secondary_color, country, city } = req.body;
@@ -28,7 +22,6 @@ export const updateClub = async (req, res) => {
   res.json(result.rows[0]);
 };
 
-// GET all users in club
 export const getClubUsers = async (req, res) => {
   const { clubId } = req.params;
 
@@ -37,14 +30,57 @@ export const getClubUsers = async (req, res) => {
      FROM club_users cu
      JOIN users u ON u.id = cu.user_id
      WHERE cu.club_id = $1
-     ORDER BY u.full_name`,
+     ORDER BY cu.role, u.full_name`,
     [clubId]
   );
 
   res.json(result.rows);
 };
 
-// Add user to club
+export const createStaffUser = async (req, res) => {
+  const { clubId } = req.params;
+  const { full_name, email, password, role } = req.body;
+
+  if (!full_name || !email || !password) {
+    return res.status(400).json({ error: "Name, email and password are required" });
+  }
+  if (!["coach", "admin"].includes(role)) {
+    return res.status(400).json({ error: "Role must be coach or admin" });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const password_hash = await bcrypt.hash(password, 10);
+    const userResult = await client.query(
+      `INSERT INTO users (full_name, email, password_hash) VALUES ($1, $2, $3)
+       RETURNING id, full_name, email`,
+      [full_name, email, password_hash]
+    );
+    const user = userResult.rows[0];
+
+    await client.query(
+      `INSERT INTO club_users (club_id, user_id, role) VALUES ($1, $2, $3)`,
+      [clubId, user.id, role]
+    );
+
+    await client.query("COMMIT");
+    res.status(201).json({ user, role });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "Email already registered" });
+    }
+    console.error(err);
+    res.status(500).json({ error: "Failed to create staff user" });
+  } finally {
+    client.release();
+  }
+};
+
 export const addUserToClub = async (req, res) => {
   const { clubId } = req.params;
   const { user_id, role } = req.body;
@@ -60,16 +96,12 @@ export const addUserToClub = async (req, res) => {
   res.json(result.rows[0] || { message: "User already in club" });
 };
 
-// Change user role
 export const changeUserRole = async (req, res) => {
   const { clubId, userId } = req.params;
   const { role } = req.body;
 
   const result = await pool.query(
-    `UPDATE club_users
-     SET role = $1
-     WHERE club_id = $2 AND user_id = $3
-     RETURNING *`,
+    `UPDATE club_users SET role = $1 WHERE club_id = $2 AND user_id = $3 RETURNING *`,
     [role, clubId, userId]
   );
 

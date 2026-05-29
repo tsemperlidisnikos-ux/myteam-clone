@@ -22,21 +22,33 @@ export const createAnnouncement = async (req, res) => {
 export const getAnnouncements = async (req, res) => {
   const { clubId } = req.params;
   const userId = req.user.user_id;
+  const role = req.user.role;
+
+  if (role === "admin" || role === "coach") {
+    const result = await pool.query(
+      `SELECT a.*, u.full_name AS author_name
+       FROM announcements a
+       LEFT JOIN users u ON u.id = a.author_id
+       WHERE a.club_id = $1
+       ORDER BY a.created_at DESC`,
+      [clubId]
+    );
+    return res.json(result.rows);
+  }
 
   const result = await pool.query(
-    `
-    SELECT *
-    FROM announcements
-    WHERE club_id = $1
-      AND (
-        target_type = 'club'
-        OR (target_type = 'team' AND target_id IN (
-            SELECT team_id FROM team_athletes WHERE user_id = $2
-        ))
-        OR (target_type = 'athlete' AND target_id = $2)
-      )
-    ORDER BY created_at DESC
-    `,
+    `SELECT a.*, u.full_name AS author_name
+     FROM announcements a
+     LEFT JOIN users u ON u.id = a.author_id
+     WHERE a.club_id = $1
+       AND (
+         a.target_type = 'club'
+         OR (a.target_type = 'team' AND a.target_id IN (
+             SELECT team_id FROM team_athletes WHERE user_id = $2
+         ))
+         OR (a.target_type = 'athlete' AND a.target_id = $2)
+       )
+     ORDER BY a.created_at DESC`,
     [clubId, userId]
   );
 
@@ -105,4 +117,25 @@ export const getNotifications = async (req, res) => {
   );
 
   res.json(result.rows);
+};
+
+export const markNotificationRead = async (req, res) => {
+  const { notificationId } = req.params;
+
+  await pool.query(
+    `UPDATE notifications SET is_read = true
+     WHERE id = $1 AND user_id = $2`,
+    [notificationId, req.user.user_id]
+  );
+
+  res.json({ message: "Marked as read" });
+};
+
+export const markAllNotificationsRead = async (req, res) => {
+  await pool.query(
+    `UPDATE notifications SET is_read = true WHERE user_id = $1`,
+    [req.user.user_id]
+  );
+
+  res.json({ message: "All marked as read" });
 };

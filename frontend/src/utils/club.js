@@ -42,3 +42,16 @@ export function requireClubId() {
   }
   return clubId;
 }
+
+export function getClubRole() {
+  return localStorage.getItem("clubRole") || "";
+}
+
+export function isAdmin() {
+  return getClubRole() === "admin";
+}
+
+export function isStaff() {
+  const role = getClubRole();
+  return role === "admin" || role === "coach";
+}

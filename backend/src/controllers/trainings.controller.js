@@ -116,3 +116,15 @@ export const getExercises = async (req, res) => {
 
   res.json(result.rows);
 };
+
+// DELETE exercise
+export const deleteExercise = async (req, res) => {
+  const { trainingId, exerciseId } = req.params;
+
+  await pool.query(
+    `DELETE FROM training_exercises WHERE id = $1 AND training_id = $2`,
+    [exerciseId, trainingId]
+  );
+
+  res.json({ message: "Exercise deleted" });
+};

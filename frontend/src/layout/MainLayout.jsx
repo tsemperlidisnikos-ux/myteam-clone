@@ -8,7 +8,8 @@ import MatchesIcon from "../icons/MatchesIcon";
 import MessagesIcon from "../icons/MessagesIcon";
 import AnalyticsIcon from "../icons/AnalyticsIcon";
 
-import { clearSession, getClubName, getStoredClubs } from "../utils/club";
+import { clearSession, getClubName, getClubRole, getStoredClubs, isAdmin } from "../utils/club";
+import ToastContainer from "../components/ToastContainer";
 
 import "./layout.css";
 
@@ -16,6 +17,7 @@ export default function MainLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const clubName = getClubName();
+  const role = getClubRole();
 
   const menu = [
     { label: "Dashboard", path: "/dashboard", icon: <DashboardIcon /> },
@@ -26,6 +28,10 @@ export default function MainLayout({ children }) {
     { label: "Messages", path: "/messages", icon: <MessagesIcon /> },
     { label: "Analytics", path: "/analytics", icon: <AnalyticsIcon /> },
   ];
+
+  if (isAdmin()) {
+    menu.push({ label: "Staff", path: "/staff", icon: <TeamsIcon /> });
+  }
 
   const logout = () => {
     clearSession();
@@ -45,7 +51,10 @@ export default function MainLayout({ children }) {
     <div className="layout-container">
       <aside className="sidebar">
         <h2 className="logo">MyTeam</h2>
-        <p className="club-label">{clubName}</p>
+        <p className="club-label">
+          {clubName}
+          {role ? ` · ${role}` : ""}
+        </p>
 
         <nav className="menu">
           {menu.map((item) => (
@@ -86,6 +95,7 @@ export default function MainLayout({ children }) {
       </aside>
 
       <main className="content">{children}</main>
+      <ToastContainer />
     </div>
   );
 }

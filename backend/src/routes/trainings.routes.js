@@ -6,7 +6,8 @@ import {
   setAttendance,
   getAttendance,
   addExercise,
-  getExercises
+  getExercises,
+  deleteExercise
 } from "../controllers/trainings.controller.js";
 
 import { authMiddleware } from "../middleware/auth.middleware.js";
@@ -40,5 +41,6 @@ router.post("/:clubId/:trainingId/exercises", addExercise);
 
 // GET /trainings/:clubId/:trainingId/exercises
 router.get("/:clubId/:trainingId/exercises", getExercises);
+router.delete("/:clubId/:trainingId/exercises/:exerciseId", deleteExercise);
 
 export default router;

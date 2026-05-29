@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
-import { requireClubId } from "../utils/club";
+import { requireClubId, isAdmin } from "../utils/club";
 import Modal from "../components/Modal";
 import "../styles/page.css";
 
@@ -109,9 +109,11 @@ export default function Athletes() {
     <div>
       <div className="page-header">
         <h1>Athletes</h1>
-        <button className="btn-primary" onClick={() => setShowAdd(true)}>
-          + Add Athlete
-        </button>
+        {isAdmin() && (
+          <button className="btn-primary" onClick={() => setShowAdd(true)}>
+            + Add Athlete
+          </button>
+        )}
       </div>
 
       <div className="page-toolbar">
@@ -171,21 +173,25 @@ export default function Athletes() {
                       <Link to={`/athletes/${a.id}`} className="btn-blue btn-link-action">
                         Profile
                       </Link>
-                      <button
-                        className="btn-blue"
-                        onClick={() => {
-                          setEditAthlete(a);
-                          setName(a.full_name);
-                          setEmail(a.email);
-                          setPosition(a.position || "");
-                          setShowEdit(true);
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button className="btn-red" onClick={() => deleteAthlete(a.id)}>
-                        Delete
-                      </button>
+                      {isAdmin() && (
+                        <>
+                          <button
+                            className="btn-blue"
+                            onClick={() => {
+                              setEditAthlete(a);
+                              setName(a.full_name);
+                              setEmail(a.email);
+                              setPosition(a.position || "");
+                              setShowEdit(true);
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button className="btn-red" onClick={() => deleteAthlete(a.id)}>
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}

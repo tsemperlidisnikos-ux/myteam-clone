@@ -13,6 +13,7 @@ import {
 
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { clubAccessMiddleware } from "../middleware/club.middleware.js";
+import { adminOnly } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
@@ -26,13 +27,9 @@ router.use("/:clubId", clubAccessMiddleware);
 router.get("/:clubId", getTeams);
 
 // POST /teams/:clubId
-router.post("/:clubId", createTeam);
-
-// PUT /teams/:clubId/:teamId
-router.put("/:clubId/:teamId", updateTeam);
-
-// DELETE /teams/:clubId/:teamId
-router.delete("/:clubId/:teamId", deleteTeam);
+router.post("/:clubId", adminOnly, createTeam);
+router.put("/:clubId/:teamId", adminOnly, updateTeam);
+router.delete("/:clubId/:teamId", adminOnly, deleteTeam);
 
 // GET /teams/:clubId/:teamId
 router.get("/:clubId/:teamId", getTeamDetails);

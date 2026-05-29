@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import useTeams from "../hooks/useTeams";
 import Modal from "../components/Modal";
+import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
 export default function Matches() {
@@ -29,7 +31,7 @@ export default function Matches() {
       const res = await api.get(`/matches/${clubId}?team_id=${selectedTeamId}`);
       setMatches(res.data);
     } catch {
-      alert("Failed to load matches");
+      showToast("Failed to load matches", "error");
     }
   };
 
@@ -54,27 +56,14 @@ export default function Matches() {
       setForm({ opponent: "", date: "", start_time: "", location: "", competition: "", notes: "" });
       loadMatches(teamId);
     } catch {
-      alert("Failed to create match");
+      showToast("Failed to create match", "error");
     }
   };
 
-  const updateScore = async (match) => {
-    const our = window.prompt("Our score:", match.our_score ?? "");
-    if (our === null) return;
-    const opp = window.prompt("Opponent score:", match.opponent_score ?? "");
-    if (opp === null) return;
-
-    try {
-      const clubId = requireClubId();
-      await api.put(`/matches/${clubId}/${match.id}`, {
-        our_score: Number(our),
-        opponent_score: Number(opp),
-      });
-      loadMatches(teamId);
-    } catch {
-      alert("Failed to update score");
-    }
-  };
+  const scoreLabel = (m) =>
+    m.our_score != null && m.opponent_score != null
+      ? `${m.our_score} – ${m.opponent_score}`
+      : "—";
 
   return (
     <div>
@@ -116,6 +105,7 @@ export default function Matches() {
                 <th>Competition</th>
                 <th>Location</th>
                 <th>Score</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -125,11 +115,11 @@ export default function Matches() {
                   <td>{m.opponent}</td>
                   <td>{m.competition || "—"}</td>
                   <td>{m.location || "—"}</td>
-                  <td>
-                    {m.our_score != null ? `${m.our_score} - ${m.opponent_score}` : "—"}
-                    <button className="btn-blue" style={{ marginLeft: 8 }} onClick={() => updateScore(m)}>
-                      Set score
-                    </button>
+                  <td>{scoreLabel(m)}</td>
+                  <td className="actions-cell">
+                    <Link to={`/matches/${m.id}`} className="btn-blue btn-link-action">
+                      Stats & Score
+                    </Link>
                   </td>
                 </tr>
               ))}
