@@ -93,7 +93,7 @@ export const listParentLinks = async (req, res) => {
 };
 
 export const linkParent = async (req, res) => {
-  const { clubId, athleteId } = req.params;
+  let { clubId, athleteId } = req.params;
   const { user_id } = req.body;
   if (!user_id) return res.status(400).json({ error: "user_id required" });
 
@@ -105,22 +105,33 @@ export const linkParent = async (req, res) => {
     return res.status(400).json({ error: "User must have parent role in this club" });
   }
 
+  let profileId = Number(athleteId);
   const athlete = await pool.query(
     `SELECT ap.id FROM athlete_profiles ap
      JOIN team_athletes ta ON ta.user_id = ap.user_id
      JOIN teams t ON t.id = ta.team_id
      WHERE ap.id = $1 AND t.club_id = $2`,
-    [athleteId, clubId]
+    [profileId, clubId]
   );
   if (!athlete.rows[0]) {
-    return res.status(404).json({ error: "Athlete not found in club" });
+    const resolved = await pool.query(
+      `SELECT ap.id FROM athlete_profiles ap
+       JOIN team_athletes ta ON ta.user_id = ap.user_id
+       JOIN teams t ON t.id = ta.team_id
+       WHERE ap.user_id = $1 AND t.club_id = $2`,
+      [profileId, clubId]
+    );
+    if (!resolved.rows[0]) {
+      return res.status(404).json({ error: "Athlete not found in club" });
+    }
+    profileId = resolved.rows[0].id;
   }
 
   await pool.query(
     `INSERT INTO parent_athletes (user_id, athlete_id, club_id)
      VALUES ($1, $2, $3)
      ON CONFLICT (user_id, athlete_id) DO NOTHING`,
-    [user_id, athleteId, clubId]
+    [user_id, profileId, clubId]
   );
   res.json({ message: "Parent linked" });
 };

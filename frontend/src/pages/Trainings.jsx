@@ -4,13 +4,14 @@ import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import useTeams from "../hooks/useTeams";
 import useClubRole from "../hooks/useClubRole";
+import { loadParentTrainings } from "../utils/parentData";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
 export default function Trainings() {
   const { teams, loading: teamsLoading } = useTeams();
-  const { isAthlete, isStaff } = useClubRole();
+  const { isAthlete, isStaff, isParent } = useClubRole();
   const [teamId, setTeamId] = useState("");
   const [trainings, setTrainings] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
@@ -25,6 +26,10 @@ export default function Trainings() {
   const loadTrainings = async (selectedTeamId) => {
     try {
       const clubId = requireClubId();
+      if (isParent) {
+        setTrainings(await loadParentTrainings(clubId));
+        return;
+      }
       if (isAthlete) {
         const res = await api.get(`/trainings/${clubId}/my`);
         setTrainings(res.data);
@@ -42,18 +47,18 @@ export default function Trainings() {
   };
 
   useEffect(() => {
-    if (isAthlete) {
+    if (isAthlete || isParent) {
       loadTrainings();
       return;
     }
     if (teams.length > 0 && !teamId) {
       setTeamId(String(teams[0].id));
     }
-  }, [teams, teamId, isAthlete]);
+  }, [teams, teamId, isAthlete, isParent]);
 
   useEffect(() => {
-    if (!isAthlete && teamId) loadTrainings(teamId);
-  }, [teamId, isAthlete]);
+    if (!isAthlete && !isParent && teamId) loadTrainings(teamId);
+  }, [teamId, isAthlete, isParent]);
 
   const createTraining = async () => {
     try {
@@ -81,7 +86,7 @@ export default function Trainings() {
         )}
       </div>
 
-      {!isAthlete && (
+      {!isAthlete && !isParent && (
       <div className="page-toolbar">
         <select
           className="page-select"
@@ -127,11 +132,13 @@ export default function Trainings() {
                   <td>{t.location || "—"}</td>
                   <td>{t.coach_name}</td>
                   <td>{t.notes || "—"}</td>
-                  <td>
-                    <Link to={`/trainings/${t.id}`} className="btn-blue">
-                      Attendance
-                    </Link>
-                  </td>
+                  {!isParent && (
+                    <td>
+                      <Link to={`/trainings/${t.id}`} className="btn-blue">
+                        Attendance
+                      </Link>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

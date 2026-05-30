@@ -5,13 +5,14 @@ import { requireClubId, getClubName } from "../utils/club";
 import useClubRole from "../hooks/useClubRole";
 import Card from "../components/Card";
 import { t } from "../i18n/el";
+import { getParentTeamIds } from "../utils/parentData";
 import "../styles/page.css";
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [upcoming, setUpcoming] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { isAdmin, isStaff, isAthlete, ready } = useClubRole();
+  const { isAdmin, isStaff, isAthlete, isParent, ready } = useClubRole();
 
   useEffect(() => {
     const load = async () => {
@@ -22,7 +23,12 @@ export default function Dashboard() {
           api.get(`/analytics/${clubId}/upcoming?limit=5`),
         ]);
         setStats(statsRes.data);
-        setUpcoming(upRes.data);
+        let upcomingData = upRes.data;
+        if (isParent) {
+          const teamIds = await getParentTeamIds(clubId);
+          upcomingData = upcomingData.filter((e) => teamIds.has(e.team_id));
+        }
+        setUpcoming(upcomingData);
       } catch {
         console.error("Failed to load dashboard stats");
       } finally {
@@ -30,7 +36,7 @@ export default function Dashboard() {
       }
     };
     load();
-  }, []);
+  }, [isParent]);
 
   const record =
     stats?.wins != null && stats?.losses != null

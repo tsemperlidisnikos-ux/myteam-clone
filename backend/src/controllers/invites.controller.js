@@ -6,6 +6,20 @@ import { signToken } from "../utils/jwt.js";
 
 const INVITE_ROLES = new Set(["athlete", "coach", "parent"]);
 
+async function resolveAthleteProfileId(clubId, athleteRef) {
+  if (!athleteRef) return null;
+  const byProfile = await pool.query(`SELECT id FROM athlete_profiles WHERE id = $1`, [athleteRef]);
+  if (byProfile.rows[0]) return byProfile.rows[0].id;
+
+  const byUser = await pool.query(
+    `SELECT ap.id FROM athlete_profiles ap
+     JOIN club_users cu ON cu.user_id = ap.user_id
+     WHERE ap.user_id = $1 AND cu.club_id = $2 AND cu.role = 'athlete'`,
+    [athleteRef, clubId]
+  );
+  return byUser.rows[0]?.id || null;
+}
+
 async function authPayloadForUser(userId) {
   const userResult = await pool.query(
     `SELECT id, full_name, email FROM users WHERE id = $1`,
@@ -34,13 +48,21 @@ export const createInvite = async (req, res) => {
     return res.status(400).json({ error: "athlete_id required for parent invite" });
   }
 
+  let profileId = null;
+  if (role === "parent") {
+    profileId = await resolveAthleteProfileId(clubId, athlete_id);
+    if (!profileId) {
+      return res.status(400).json({ error: "Athlete not found in club" });
+    }
+  }
+
   const token = crypto.randomBytes(32).toString("hex");
   const expires = new Date(Date.now() + 7 * 86400000);
 
   await pool.query(
     `INSERT INTO club_invites (club_id, email, role, token, invited_by, expires_at, athlete_id)
      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [clubId, email.toLowerCase(), role, token, req.user.user_id, expires, athlete_id || null]
+    [clubId, email.toLowerCase(), role, token, req.user.user_id, expires, profileId]
   );
 
   const inviteUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/accept-invite?token=${token}`;
@@ -116,6 +138,7 @@ export const acceptInvite = async (req, res) => {
     });
   } catch (e) {
     await client.query("ROLLBACK");
+    console.error("acceptInvite:", e.message);
     res.status(500).json({ error: "Failed to accept invite" });
   } finally {
     client.release();

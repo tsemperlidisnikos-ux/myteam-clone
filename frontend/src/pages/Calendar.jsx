@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import { t } from "../i18n/el";
+import useClubRole from "../hooks/useClubRole";
+import { getParentTeamIds } from "../utils/parentData";
 import "../styles/page.css";
 
 function monthRange(offset) {
@@ -33,6 +35,7 @@ export default function Calendar() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("grid");
+  const { isParent } = useClubRole();
 
   const range = useMemo(() => monthRange(offset), [offset]);
 
@@ -44,7 +47,12 @@ export default function Calendar() {
         const res = await api.get(
           `/analytics/${clubId}/calendar?from=${range.from}&to=${range.to}`
         );
-        setEvents(res.data);
+        let data = res.data;
+        if (isParent) {
+          const teamIds = await getParentTeamIds(clubId);
+          data = data.filter((e) => teamIds.has(e.team_id));
+        }
+        setEvents(data);
       } catch {
         setEvents([]);
       } finally {
@@ -52,7 +60,7 @@ export default function Calendar() {
       }
     };
     load();
-  }, [range.from, range.to]);
+  }, [range.from, range.to, isParent]);
 
   const byDate = useMemo(() => {
     const map = {};

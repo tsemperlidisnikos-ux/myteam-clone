@@ -4,7 +4,7 @@ import { requireClubId } from "../utils/club";
 import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
-import { t, roleLabel } from "../i18n/el";
+import { t } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Staff() {

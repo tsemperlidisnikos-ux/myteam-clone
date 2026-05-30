@@ -4,13 +4,14 @@ import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import useTeams from "../hooks/useTeams";
 import useClubRole from "../hooks/useClubRole";
+import { loadParentMatches } from "../utils/parentData";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
 export default function Matches() {
   const { teams, loading: teamsLoading } = useTeams();
-  const { isAthlete, isStaff } = useClubRole();
+  const { isAthlete, isStaff, isParent } = useClubRole();
   const [teamId, setTeamId] = useState("");
   const [matches, setMatches] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
@@ -26,6 +27,10 @@ export default function Matches() {
   const loadMatches = async (selectedTeamId) => {
     try {
       const clubId = requireClubId();
+      if (isParent) {
+        setMatches(await loadParentMatches(clubId));
+        return;
+      }
       if (isAthlete) {
         const res = await api.get(`/matches/${clubId}/my`);
         setMatches(res.data);
@@ -43,18 +48,18 @@ export default function Matches() {
   };
 
   useEffect(() => {
-    if (isAthlete) {
+    if (isAthlete || isParent) {
       loadMatches();
       return;
     }
     if (teams.length > 0 && !teamId) {
       setTeamId(String(teams[0].id));
     }
-  }, [teams, teamId, isAthlete]);
+  }, [teams, teamId, isAthlete, isParent]);
 
   useEffect(() => {
-    if (!isAthlete && teamId) loadMatches(teamId);
-  }, [teamId, isAthlete]);
+    if (!isAthlete && !isParent && teamId) loadMatches(teamId);
+  }, [teamId, isAthlete, isParent]);
 
   const createMatch = async () => {
     try {
@@ -87,7 +92,7 @@ export default function Matches() {
         )}
       </div>
 
-      {!isAthlete && (
+      {!isAthlete && !isParent && (
       <div className="page-toolbar">
         <select
           className="page-select"
@@ -131,11 +136,13 @@ export default function Matches() {
                   <td>{m.competition || "—"}</td>
                   <td>{m.location || "—"}</td>
                   <td>{scoreLabel(m)}</td>
-                  <td className="actions-cell">
-                    <Link to={`/matches/${m.id}`} className="btn-blue btn-link-action">
-                      Stats & Score
-                    </Link>
-                  </td>
+                  {!isParent && (
+                    <td className="actions-cell">
+                      <Link to={`/matches/${m.id}`} className="btn-blue btn-link-action">
+                        Stats & Score
+                      </Link>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
