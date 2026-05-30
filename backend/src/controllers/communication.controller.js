@@ -35,9 +35,17 @@ export const createAnnouncement = async (req, res) => {
   } else if (target_type === "team" && target_id) {
     const notify = await pool.query(
       `INSERT INTO notifications (user_id, title, body)
-       SELECT ta.user_id, $1, $2
-       FROM team_athletes ta
-       WHERE ta.team_id = $3 AND ta.user_id != $4
+       SELECT DISTINCT user_id, $1, $2 FROM (
+         SELECT ta.user_id
+         FROM team_athletes ta
+         WHERE ta.team_id = $3 AND ta.user_id != $4
+         UNION
+         SELECT pa.user_id
+         FROM parent_athletes pa
+         JOIN athlete_profiles ap ON ap.id = pa.athlete_id
+         JOIN team_athletes ta ON ta.user_id = ap.user_id
+         WHERE ta.team_id = $3 AND pa.user_id != $4
+       ) recipients
        RETURNING user_id`,
       [title, message, target_id, req.user.user_id]
     );

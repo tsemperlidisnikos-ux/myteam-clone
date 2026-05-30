@@ -20,6 +20,9 @@ const API = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000";
 const QUEUE_KEY = "attendance_queue";
 const TOKEN_KEY = "auth_token";
 const CLUB_KEY = "club_id";
+const ROLE_KEY = "club_role";
+
+const MOBILE_ROLES = new Set(["admin", "coach"]);
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -44,6 +47,20 @@ async function loadQueue() {
 
 async function saveQueue(queue) {
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+}
+
+function upsertQueueItem(queue, item) {
+  const next = queue.filter(
+    (q) => !(q.trainingId === item.trainingId && q.athleteId === item.athleteId)
+  );
+  next.push(item);
+  return next;
+}
+
+async function clearSession() {
+  await SecureStore.deleteItemAsync(TOKEN_KEY);
+  await SecureStore.deleteItemAsync(CLUB_KEY);
+  await SecureStore.deleteItemAsync(ROLE_KEY);
 }
 
 async function registerPushToken(authToken) {
@@ -172,12 +189,17 @@ export default function App() {
       try {
         const savedToken = await SecureStore.getItemAsync(TOKEN_KEY);
         const savedClub = await SecureStore.getItemAsync(CLUB_KEY);
+        const savedRole = await SecureStore.getItemAsync(ROLE_KEY);
         if (savedToken && savedClub && active) {
-          setToken(savedToken);
-          setClubId(savedClub);
-          await bootstrapSession(savedToken, savedClub);
-          await flushQueue(savedToken, savedClub);
-          await registerPushToken(savedToken);
+          if (savedRole && !MOBILE_ROLES.has(savedRole)) {
+            await clearSession();
+          } else {
+            setToken(savedToken);
+            setClubId(savedClub);
+            await bootstrapSession(savedToken, savedClub);
+            await flushQueue(savedToken, savedClub);
+            await registerPushToken(savedToken);
+          }
         }
       } catch {
         // ignore restore errors
@@ -213,10 +235,15 @@ export default function App() {
         setError("No club on this account");
         return;
       }
+      if (!MOBILE_ROLES.has(club.role)) {
+        setError("Το mobile app είναι για admin/coach. Χρησιμοποίησε το web.");
+        return;
+      }
       setToken(t);
       setClubId(String(club.club_id));
       await SecureStore.setItemAsync(TOKEN_KEY, t);
       await SecureStore.setItemAsync(CLUB_KEY, String(club.club_id));
+      await SecureStore.setItemAsync(ROLE_KEY, club.role || "");
 
       await bootstrapSession(t, club.club_id);
       await flushQueue(t, club.club_id);
@@ -238,8 +265,7 @@ export default function App() {
   const logout = async () => {
     setToken("");
     setClubId("");
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-    await SecureStore.deleteItemAsync(CLUB_KEY);
+    await clearSession();
   };
 
   const switchTeam = async (id) => {
@@ -323,8 +349,7 @@ export default function App() {
     const isOffline = !(net.isConnected && net.isInternetReachable !== false);
 
     if (isOffline) {
-      const queue = await loadQueue();
-      queue.push({
+      const queue = upsertQueueItem(await loadQueue(), {
         clubId,
         trainingId: selectedTraining.id,
         athleteId,
@@ -344,8 +369,7 @@ export default function App() {
       const res = await api.get(`/trainings/${clubId}/${selectedTraining.id}/attendance`);
       setAttendance(res.data);
     } catch {
-      const queue = await loadQueue();
-      queue.push({
+      const queue = upsertQueueItem(await loadQueue(), {
         clubId,
         trainingId: selectedTraining.id,
         athleteId,
