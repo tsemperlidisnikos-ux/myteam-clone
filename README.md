@@ -13,9 +13,12 @@ Sports club management — teams, athletes, trainings, matches, analytics, calen
 ## Quick start (Windows)
 
 ```bat
-start.bat          REM backend + frontend
-start.bat all      REM + mobile
+setup-all.bat        REM deps + migrate + tests (first time)
+start.bat            REM backend + frontend
+start.bat all        REM + mobile
 stop.bat
+auth-github.bat      REM GitHub login + push (once)
+push-github.bat      REM push only (after auth)
 ```
 
 Manual:
