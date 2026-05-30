@@ -31,17 +31,20 @@ GitHub Actions (`.github/workflows/ci.yml`) τρέχει:
 ## Γρήγορο cloud deploy (1 κλικ)
 
 ```bat
-deploy.bat
+setup-production-db.bat
 ```
 
-Ανοίγει Neon + Railway + Vercel με το repo σου ήδη συνδεδεμένο. Μετά:
+1. Render δημιουργεί **μόνο PostgreSQL** (free)
+2. Copy **External Database URL** από `myteam-db` → Connect
+3. Paste στο script → migrate + seed + Vercel redeploy
 
-1. **Neon** → δημιούργησε DB → copy `DATABASE_URL`
-2. **Railway** → import GitHub repo → **Root: `backend/`** → βάλε env vars
-3. **Vercel** → import repo → **Root: `frontend/`** → `VITE_API_URL` = Railway URL
-4. **Railway** → `FRONTEND_URL` = Vercel URL → redeploy
+Live URLs:
+- Web: https://frontend-nine-zeta-f5xz9ekez5.vercel.app
+- API: https://backend-sigma-six-35.vercel.app
 
-Για GitHub Actions deploy (optional): πρόσθεσε secrets `RAILWAY_TOKEN`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `VITE_API_URL` → τρέξε workflow **Deploy**.
+Login μετά seed: `nikos.tseberlidis@gmail.com` / `123456` (PROMITHEAS BC)
+
+Εναλλακτικά Neon: `finish-db.bat` (Accept terms → Vercel integration)
 
 ---
 
