@@ -4,7 +4,7 @@ import { requireClubId } from "../utils/club";
 import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
-import { t } from "../i18n/el";
+import { t, roleLabel } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Staff() {
@@ -20,6 +20,8 @@ export default function Staff() {
   });
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("athlete");
+  const [inviteAthleteId, setInviteAthleteId] = useState("");
+  const [athletes, setAthletes] = useState([]);
 
   const load = async () => {
     setLoading(true);
@@ -36,6 +38,8 @@ export default function Staff() {
 
   useEffect(() => {
     load();
+    const clubId = requireClubId();
+    api.get(`/athletes/${clubId}`).then((res) => setAthletes(res.data)).catch(() => {});
   }, []);
 
   const sendInvite = async () => {
@@ -44,6 +48,9 @@ export default function Staff() {
       const res = await api.post(`/clubs/${clubId}/invites`, {
         email: inviteEmail,
         role: inviteRole,
+        ...(inviteRole === "parent" && inviteAthleteId
+          ? { athlete_id: Number(inviteAthleteId) }
+          : {}),
       });
       showToast(res.data.message || "Invite sent", "success");
       setInviteEmail("");
@@ -128,11 +135,26 @@ export default function Staff() {
           value={inviteRole}
           onChange={(e) => setInviteRole(e.target.value)}
         >
-          <option value="athlete">athlete</option>
-          <option value="coach">coach</option>
+          <option value="athlete">{t("roleAthlete")}</option>
+          <option value="coach">{t("roleCoach")}</option>
+          <option value="parent">{t("roleParent")}</option>
         </select>
+        {inviteRole === "parent" && (
+          <select
+            className="modal-field"
+            value={inviteAthleteId}
+            onChange={(e) => setInviteAthleteId(e.target.value)}
+          >
+            <option value="">{t("athlete")}</option>
+            {athletes.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.full_name}
+              </option>
+            ))}
+          </select>
+        )}
         <button className="btn-primary" onClick={sendInvite}>
-          Αποστολή πρόσκλησης
+          {t("sendInvite")}
         </button>
       </div>
 

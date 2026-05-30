@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { handleAuthSuccess } from "../utils/auth";
 import { showToast } from "../utils/toast";
+import { t } from "../i18n/el";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,41 +17,41 @@ export default function Login() {
     } catch (err) {
       const msg =
         err.response?.data?.error === "Invalid credentials"
-          ? "Λάθος email ή password"
+          ? t("invalidCredentials")
           : err.response?.data?.error ||
-            (err.code === "ERR_NETWORK"
-              ? "Δεν συνδέεται το backend. Τρέξε npm run dev στο backend (port 5000)."
-              : "Login failed");
+            (err.code === "ERR_NETWORK" ? t("networkError") : "Login failed");
       showToast(msg, "error");
     }
   };
 
   return (
     <div style={{ padding: 40, maxWidth: 420 }}>
-      <h1>Login</h1>
+      <h1>{t("login")}</h1>
 
       <input
-        placeholder="Email"
+        placeholder={t("email")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         style={inputStyle}
       />
 
       <input
-        placeholder="Password"
+        placeholder={t("password")}
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         style={inputStyle}
       />
 
-      <button onClick={login} style={btnStyle}>Login</button>
+      <button onClick={login} style={btnStyle}>
+        {t("login")}
+      </button>
 
       <p style={{ marginTop: 12 }}>
-        <Link to="/forgot-password">Ξέχασα τον κωδικό</Link>
+        <Link to="/forgot-password">{t("forgotPassword")}</Link>
       </p>
       <p style={{ marginTop: 16 }}>
-        New club? <Link to="/register">Register Club</Link>
+        {t("newClub")} <Link to="/register">{t("registerClub")}</Link>
       </p>
     </div>
   );

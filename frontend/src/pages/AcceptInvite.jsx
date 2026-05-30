@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/axios";
+import { handleAuthSuccess } from "../utils/auth";
 import { showToast } from "../utils/toast";
+import { t } from "../i18n/el";
 
 export default function AcceptInvite() {
   const [params] = useSearchParams();
@@ -12,13 +14,18 @@ export default function AcceptInvite() {
 
   const submit = async () => {
     try {
-      await api.post("/auth/accept-invite", {
+      const res = await api.post("/auth/accept-invite", {
         token,
         password,
         full_name: fullName,
       });
-      showToast("Η πρόσκληση εγινε αποδεκτή", "success");
-      navigate("/");
+      if (res.data.token) {
+        handleAuthSuccess(res.data, navigate);
+        showToast("Η πρόσκληση εγινε αποδεκτή", "success");
+      } else {
+        showToast("Η πρόσκληση εγινε αποδεκτή", "success");
+        navigate("/");
+      }
     } catch (err) {
       showToast(err.response?.data?.error || "Αποτυχία", "error");
     }
@@ -26,25 +33,25 @@ export default function AcceptInvite() {
 
   return (
     <div style={{ padding: 40, maxWidth: 420 }}>
-      <h1>Αποδοχή πρόσκλησης</h1>
+      <h1>{t("acceptInvite")}</h1>
       <input
-        placeholder="Ονοματεπώνυμο"
+        placeholder={t("fullName")}
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}
         style={{ width: "100%", padding: 10, marginBottom: 10 }}
       />
       <input
         type="password"
-        placeholder="Κωδικός"
+        placeholder={t("password")}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         style={{ width: "100%", padding: 10, marginBottom: 10 }}
       />
       <button onClick={submit} disabled={!token} style={{ padding: "10px 16px" }}>
-        Εγγραφή
+        {t("register")}
       </button>
       <p style={{ marginTop: 16 }}>
-        <Link to="/">← Login</Link>
+        <Link to="/">{t("backToLogin")}</Link>
       </p>
     </div>
   );

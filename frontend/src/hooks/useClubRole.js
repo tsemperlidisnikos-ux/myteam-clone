@@ -24,5 +24,6 @@ export default function useClubRole() {
     isAdmin: role === "admin",
     isStaff: role === "admin" || role === "coach",
     isAthlete: role === "athlete",
+    isParent: role === "parent",
   };
 }

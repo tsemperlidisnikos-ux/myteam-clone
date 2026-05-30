@@ -2,19 +2,45 @@ import crypto from "node:crypto";
 import bcrypt from "bcrypt";
 import { pool } from "../db/pool.js";
 import { sendEmail } from "../services/email.service.js";
+import { signToken } from "../utils/jwt.js";
+
+const INVITE_ROLES = new Set(["athlete", "coach", "parent"]);
+
+async function authPayloadForUser(userId) {
+  const userResult = await pool.query(
+    `SELECT id, full_name, email FROM users WHERE id = $1`,
+    [userId]
+  );
+  const user = userResult.rows[0];
+  const clubsResult = await pool.query(
+    `SELECT cu.club_id, cu.role, c.name AS club_name, c.logo_url
+     FROM club_users cu
+     JOIN clubs c ON c.id = cu.club_id
+     WHERE cu.user_id = $1`,
+    [userId]
+  );
+  const token = signToken({ user_id: user.id, email: user.email });
+  return { token, user, clubs: clubsResult.rows };
+}
 
 export const createInvite = async (req, res) => {
   const { clubId } = req.params;
-  const { email, role = "athlete", full_name } = req.body;
+  const { email, role = "athlete", full_name, athlete_id } = req.body;
   if (!email) return res.status(400).json({ error: "Email required" });
+  if (!INVITE_ROLES.has(role)) {
+    return res.status(400).json({ error: "Invalid role" });
+  }
+  if (role === "parent" && !athlete_id) {
+    return res.status(400).json({ error: "athlete_id required for parent invite" });
+  }
 
   const token = crypto.randomBytes(32).toString("hex");
   const expires = new Date(Date.now() + 7 * 86400000);
 
   await pool.query(
-    `INSERT INTO club_invites (club_id, email, role, token, invited_by, expires_at)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [clubId, email.toLowerCase(), role, token, req.user.user_id, expires]
+    `INSERT INTO club_invites (club_id, email, role, token, invited_by, expires_at, athlete_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [clubId, email.toLowerCase(), role, token, req.user.user_id, expires, athlete_id || null]
   );
 
   const inviteUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/accept-invite?token=${token}`;
@@ -69,9 +95,25 @@ export const acceptInvite = async (req, res) => {
        ON CONFLICT (club_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
       [invite.club_id, userId, invite.role]
     );
+
+    if (invite.role === "parent" && invite.athlete_id) {
+      await client.query(
+        `INSERT INTO parent_athletes (user_id, athlete_id, club_id)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, athlete_id) DO NOTHING`,
+        [userId, invite.athlete_id, invite.club_id]
+      );
+    }
+
     await client.query(`UPDATE club_invites SET accepted_at = NOW() WHERE id = $1`, [invite.id]);
     await client.query("COMMIT");
-    res.json({ message: "Invite accepted. You can log in now.", club_id: invite.club_id });
+
+    const auth = await authPayloadForUser(userId);
+    res.json({
+      message: "Invite accepted",
+      club_id: invite.club_id,
+      ...auth,
+    });
   } catch (e) {
     await client.query("ROLLBACK");
     res.status(500).json({ error: "Failed to accept invite" });

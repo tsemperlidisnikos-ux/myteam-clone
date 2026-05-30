@@ -11,7 +11,7 @@ import AnalyticsIcon from "../icons/AnalyticsIcon";
 import { clearSession, getClubName, getStoredClubs } from "../utils/club";
 import useClubRole from "../hooks/useClubRole";
 import ThemeToggle from "../components/ThemeToggle";
-import { t } from "../i18n/el";
+import { t, roleLabel } from "../i18n/el";
 
 import "./layout.css";
 
@@ -19,13 +19,15 @@ export default function MainLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const clubName = getClubName();
-  const { role, isAdmin, isAthlete, ready } = useClubRole();
+  const { role, isAdmin, isAthlete, isParent, ready } = useClubRole();
 
   const menu = [{ label: t("dashboard"), path: "/dashboard", icon: <DashboardIcon /> }];
 
   menu.push({ label: t("calendar"), path: "/calendar", icon: <TrainingsIcon /> });
 
-  if (!isAthlete) {
+  if (isParent) {
+    menu.push({ label: t("myChildren"), path: "/my-children", icon: <AthletesIcon /> });
+  } else if (!isAthlete) {
     menu.push(
       { label: t("teams"), path: "/teams", icon: <TeamsIcon /> },
       { label: t("athletes"), path: "/athletes", icon: <AthletesIcon /> }
@@ -43,7 +45,7 @@ export default function MainLayout({ children }) {
     { label: t("messages"), path: "/messages", icon: <MessagesIcon /> }
   );
 
-  if (!isAthlete) {
+  if (!isAthlete && !isParent) {
     menu.push({ label: t("analytics"), path: "/analytics", icon: <AnalyticsIcon /> });
     menu.push({ label: t("medical"), path: "/medical", icon: <AthletesIcon /> });
     menu.push({ label: t("parents"), path: "/parents", icon: <AthletesIcon /> });
@@ -69,7 +71,7 @@ export default function MainLayout({ children }) {
         <h2 className="logo">MyTeam</h2>
         <p className="club-label">
           {clubName}
-          {role ? ` · ${role}` : ready ? "" : " · …"}
+          {role ? ` · ${roleLabel(role)}` : ready ? "" : " · …"}
         </p>
 
         <nav className="menu">
@@ -102,7 +104,7 @@ export default function MainLayout({ children }) {
           </Link>
           {getStoredClubs().length > 1 && (
             <button type="button" className="sidebar-btn" onClick={switchClub}>
-              Switch Club
+              {t("switchClub")}
             </button>
           )}
           <button type="button" className="sidebar-btn logout" onClick={logout}>

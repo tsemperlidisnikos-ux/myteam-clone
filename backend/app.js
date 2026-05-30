@@ -18,6 +18,7 @@ import communicationRoutes from "./src/routes/communication.routes.js";
 import analyticsRoutes from "./src/routes/analytics.routes.js";
 import billingRoutes from "./src/routes/billing.routes.js";
 import pushRoutes from "./src/routes/push.routes.js";
+import parentRoutes from "./src/routes/parent.routes.js";
 import { authMiddleware } from "./src/middleware/auth.middleware.js";
 import { uploadsDir } from "./src/middleware/upload.middleware.js";
 
@@ -82,6 +83,7 @@ app.get("/health", async (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/billing", billingRoutes);
 app.use("/push", pushRoutes);
+app.use("/parents", parentRoutes);
 app.use("/clubs", authMiddleware, clubsRoutes);
 app.use("/teams", authMiddleware, teamsRoutes);
 app.use("/athletes", authMiddleware, athletesRoutes);

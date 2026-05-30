@@ -21,6 +21,7 @@ export const el = {
   darkMode: "Σκοτεινό θέμα",
   lightMode: "Φωτεινό θέμα",
   myProfile: "Το προφίλ μου",
+  myChildren: "Τα παιδιά μου",
   upcoming: "Επόμενα",
   listView: "Λίστα",
   gridView: "Πλέγμα",
@@ -30,8 +31,52 @@ export const el = {
   billing: "Συνδρομή",
   invite: "Πρόσκληση",
   quickActions: "Γρήγορες ενέργειες",
+  login: "Σύνδεση",
+  email: "Email",
+  password: "Κωδικός",
+  registerClub: "Εγγραφή συλλόγου",
+  newClub: "Νέος σύλλογος;",
+  chooseClub: "Επιλογή συλλόγου",
+  backToLogin: "← Σύνδεση",
+  switchClub: "Αλλαγή συλλόγου",
+  fullName: "Ονοματεπώνυμο",
+  acceptInvite: "Αποδοχή πρόσκλησης",
+  register: "Εγγραφή",
+  clubName: "Όνομα συλλόγου",
+  country: "Χώρα",
+  city: "Πόλη",
+  noClub: "Δεν υπάρχει σύλλογος σε αυτόν τον λογαριασμό",
+  invalidCredentials: "Λάθος email ή κωδικός",
+  networkError: "Δεν συνδέεται το backend. Τρέξε npm run dev στο backend (port 5000).",
+  roleAdmin: "διαχειριστής",
+  roleCoach: "προπονητής",
+  roleAthlete: "αθλητής",
+  roleParent: "γονέας",
+  parentContacts: "Επαφές γονέων από προφίλ αθλητών",
+  parentAccounts: "Λογαριασμοί γονέων συνδεδεμένοι με αθλητές",
+  noParentData: "Δεν υπάρχουν στοιχεία γονέων.",
+  athlete: "Αθλητής",
+  parent: "Γονέας",
+  phone: "Τηλέφωνο",
+  team: "Ομάδα",
+  sendInvite: "Αποστολή πρόσκλησης",
+  addStaff: "Προσθήκη προσωπικού",
+  create: "Δημιουργία",
+  noChildren: "Δεν υπάρχουν συνδεδεμένα παιδιά.",
+  selectChild: "Επίλεξε παιδί για προπονήσεις και αγώνες.",
+  offlineQueued: "Αποθηκεύτηκε offline — θα σταλεί όταν επανέλθει η σύνδεση",
 };
 
 export function t(key) {
   return el[key] || key;
+}
+
+export function roleLabel(role) {
+  const map = {
+    admin: el.roleAdmin,
+    coach: el.roleCoach,
+    athlete: el.roleAthlete,
+    parent: el.roleParent,
+  };
+  return map[role] || role;
 }

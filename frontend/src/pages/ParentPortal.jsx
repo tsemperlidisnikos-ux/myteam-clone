@@ -7,12 +7,17 @@ import "../styles/page.css";
 
 export default function ParentPortal() {
   const [rows, setRows] = useState([]);
+  const [links, setLinks] = useState([]);
 
   useEffect(() => {
     const load = async () => {
       const clubId = requireClubId();
-      const res = await api.get(`/athletes/${clubId}/medical`);
-      setRows(res.data.filter((r) => r.parent_name || r.parent_phone));
+      const [medical, parentLinks] = await Promise.all([
+        api.get(`/athletes/${clubId}/medical`),
+        api.get(`/parents/${clubId}/links`),
+      ]);
+      setRows(medical.data.filter((r) => r.parent_name || r.parent_phone));
+      setLinks(parentLinks.data);
     };
     load();
   }, []);
@@ -22,20 +27,49 @@ export default function ParentPortal() {
       <div className="page-header">
         <h1>{t("parents")}</h1>
       </div>
-      <div className="page-panel">
-        <p style={{ marginBottom: 16, color: "#6b7280" }}>
-          Επαφές γονέων από προφίλ αθλητών. Μελλοντικά: ξεχωριστός λογαριασμός γονέα.
-        </p>
-        {rows.length === 0 ? (
-          <p>Δεν υπάρχουν στοιχεία γονέων.</p>
+
+      <div className="page-panel" style={{ marginBottom: 16 }}>
+        <h2>{t("parentAccounts")}</h2>
+        {links.length === 0 ? (
+          <p>{t("noParentData")}</p>
         ) : (
           <table className="page-table">
             <thead>
               <tr>
-                <th>Αθλητής</th>
-                <th>Γονέας</th>
-                <th>Τηλέφωνο</th>
-                <th>Email</th>
+                <th>{t("parent")}</th>
+                <th>{t("email")}</th>
+                <th>{t("athlete")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {links.map((l) => (
+                <tr key={l.id}>
+                  <td>{l.parent_name}</td>
+                  <td>{l.parent_email}</td>
+                  <td>
+                    <Link to={`/athletes/${l.athlete_id}`} className="page-link">
+                      {l.athlete_name}
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div className="page-panel">
+        <p style={{ marginBottom: 16, color: "#6b7280" }}>{t("parentContacts")}</p>
+        {rows.length === 0 ? (
+          <p>{t("noParentData")}</p>
+        ) : (
+          <table className="page-table">
+            <thead>
+              <tr>
+                <th>{t("athlete")}</th>
+                <th>{t("parent")}</th>
+                <th>{t("phone")}</th>
+                <th>{t("email")}</th>
               </tr>
             </thead>
             <tbody>

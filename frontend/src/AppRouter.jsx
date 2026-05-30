@@ -4,9 +4,11 @@ import Login from "./pages/Login";
 import RegisterClub from "./pages/RegisterClub";
 import ChooseClub from "./pages/ChooseClub";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AcceptInvite from "./pages/AcceptInvite";
 import Medical from "./pages/Medical";
 import ParentPortal from "./pages/ParentPortal";
+import ParentHome from "./pages/ParentHome";
 import Dashboard from "./pages/Dashboard";
 import Teams from "./pages/Teams";
 import Athletes from "./pages/Athletes";
@@ -78,6 +80,7 @@ export default function AppRouter() {
 
           <Route path="/dashboard" element={withLayout(Dashboard)} />
           <Route path="/my-profile" element={withLayout(MyProfile)} />
+          <Route path="/my-children" element={withLayout(ParentHome)} />
           <Route path="/teams" element={withStaffLayout(Teams)} />
           <Route path="/teams/:teamId" element={withStaffLayout(TeamDetails)} />
           <Route path="/athletes" element={withStaffLayout(Athletes)} />

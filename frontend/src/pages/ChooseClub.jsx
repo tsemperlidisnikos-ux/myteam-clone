@@ -1,5 +1,6 @@
 import { useNavigate, Navigate } from "react-router-dom";
 import { getStoredClubs, setActiveClub } from "../utils/club";
+import { t, roleLabel } from "../i18n/el";
 
 export default function ChooseClub() {
   const navigate = useNavigate();
@@ -17,17 +18,16 @@ export default function ChooseClub() {
   if (clubs.length === 0) {
     return (
       <div style={{ padding: 40 }}>
-        <h1>Choose Club</h1>
-        <p>No clubs found. Please log in again.</p>
-        <button onClick={() => navigate("/")}>Back to Login</button>
+        <h1>{t("chooseClub")}</h1>
+        <p>{t("noClub")}</p>
+        <button onClick={() => navigate("/")}>{t("backToLogin")}</button>
       </div>
     );
   }
 
   return (
     <div style={{ padding: 40 }}>
-      <h1>Choose Club</h1>
-      <p>Select which club you want to manage.</p>
+      <h1>{t("chooseClub")}</h1>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 20 }}>
         {clubs.map((club) => (
@@ -44,7 +44,7 @@ export default function ChooseClub() {
             }}
           >
             <strong>{club.club_name}</strong>
-            <div style={{ color: "#6b7280", marginTop: 4 }}>{club.role}</div>
+            <div style={{ color: "#6b7280", marginTop: 4 }}>{roleLabel(club.role)}</div>
           </button>
         ))}
       </div>

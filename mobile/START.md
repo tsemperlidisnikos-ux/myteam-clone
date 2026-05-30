@@ -16,6 +16,12 @@ npm start
 
 Σκάναρε QR με **Expo Go** (Play Store / App Store).
 
+## Νέα features
+
+- **Offline παρουσίες**: αν χαθεί το δίκτυο, οι παρουσίες αποθηκεύονται τοπικά και στέλνονται αυτόματα όταν επανέλθει η σύνδεση.
+- **Push notifications**: μετά το login ζητείται άδεια· ο server στέλνει push για ανακοινώσεις και μηνύματα.
+- **Αποθήκευση session**: το token κρατιέται με SecureStore — δεν χρειάζεται login κάθε φορά.
+
 ## Αν ΔΕΝ ανοίγει στο κινητό
 
 ### A) Tunnel mode (πιο εύκολο — bypass Wi‑Fi/firewall)

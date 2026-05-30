@@ -1,4 +1,5 @@
 import { pool } from "../db/pool.js";
+import { sendPushToUser, sendPushToUsers } from "../services/push.service.js";
 
 //
 // ANNOUNCEMENTS
@@ -19,20 +20,30 @@ export const createAnnouncement = async (req, res) => {
   const announcement = result.rows[0];
 
   if (target_type === "club") {
-    await pool.query(
+    const notify = await pool.query(
       `INSERT INTO notifications (user_id, title, body)
        SELECT cu.user_id, $1, $2
        FROM club_users cu
-       WHERE cu.club_id = $3 AND cu.user_id != $4`,
+       WHERE cu.club_id = $3 AND cu.user_id != $4
+       RETURNING user_id`,
       [title, message, clubId, req.user.user_id]
     );
+    await sendPushToUsers(
+      notify.rows.map((r) => r.user_id),
+      { title, body: message }
+    );
   } else if (target_type === "team" && target_id) {
-    await pool.query(
+    const notify = await pool.query(
       `INSERT INTO notifications (user_id, title, body)
        SELECT ta.user_id, $1, $2
        FROM team_athletes ta
-       WHERE ta.team_id = $3 AND ta.user_id != $4`,
+       WHERE ta.team_id = $3 AND ta.user_id != $4
+       RETURNING user_id`,
       [title, message, target_id, req.user.user_id]
+    );
+    await sendPushToUsers(
+      notify.rows.map((r) => r.user_id),
+      { title, body: message }
     );
   }
 
@@ -52,6 +63,27 @@ export const getAnnouncements = async (req, res) => {
        WHERE a.club_id = $1
        ORDER BY a.created_at DESC`,
       [clubId]
+    );
+    return res.json(result.rows);
+  }
+
+  if (role === "parent") {
+    const result = await pool.query(
+      `SELECT a.*, u.full_name AS author_name
+       FROM announcements a
+       LEFT JOIN users u ON u.id = a.author_id
+       WHERE a.club_id = $1
+         AND (
+           a.target_type = 'club'
+           OR (a.target_type = 'team' AND a.target_id IN (
+               SELECT ta.team_id FROM parent_athletes pa
+               JOIN athlete_profiles ap ON ap.id = pa.athlete_id
+               JOIN team_athletes ta ON ta.user_id = ap.user_id
+               WHERE pa.user_id = $2
+           ))
+         )
+       ORDER BY a.created_at DESC`,
+      [clubId, userId]
     );
     return res.json(result.rows);
   }
@@ -89,6 +121,11 @@ export const sendMessage = async (req, res) => {
     [req.user.user_id, receiver_id, content]
   );
 
+  await sendPushToUser(receiver_id, {
+    title: "Νέο μήνυμα",
+    body: content?.slice(0, 120) || "MyTeam",
+  });
+
   res.json(result.rows[0]);
 };
 
@@ -121,6 +158,8 @@ export const createNotification = async (req, res) => {
      RETURNING *`,
     [user_id, title, body]
   );
+
+  await sendPushToUser(user_id, { title, body });
 
   res.json(result.rows[0]);
 };

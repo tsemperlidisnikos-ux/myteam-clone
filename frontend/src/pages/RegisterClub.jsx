@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { handleAuthSuccess } from "../utils/auth";
 import { showToast } from "../utils/toast";
+import { t } from "../i18n/el";
 
 export default function RegisterClub() {
   const navigate = useNavigate();
@@ -25,27 +26,25 @@ export default function RegisterClub() {
     } catch (err) {
       const msg =
         err.response?.data?.error ||
-        (err.code === "ERR_NETWORK"
-          ? "Cannot reach backend. Is npm run dev running on port 5000?"
-          : "Registration failed");
+        (err.code === "ERR_NETWORK" ? t("networkError") : "Registration failed");
       showToast(msg, "error");
     }
   };
 
   return (
     <div style={{ padding: 40, maxWidth: 420 }}>
-      <h1>Register Club</h1>
+      <h1>{t("registerClub")}</h1>
 
-      <input placeholder="Full name" value={form.full_name} onChange={update("full_name")} style={inputStyle} />
-      <input placeholder="Email" value={form.email} onChange={update("email")} style={inputStyle} />
-      <input placeholder="Password" type="password" value={form.password} onChange={update("password")} style={inputStyle} />
-      <input placeholder="Club name" value={form.club_name} onChange={update("club_name")} style={inputStyle} />
-      <input placeholder="Country" value={form.country} onChange={update("country")} style={inputStyle} />
-      <input placeholder="City" value={form.city} onChange={update("city")} style={inputStyle} />
+      <input placeholder={t("fullName")} value={form.full_name} onChange={update("full_name")} style={inputStyle} />
+      <input placeholder={t("email")} value={form.email} onChange={update("email")} style={inputStyle} />
+      <input placeholder={t("password")} type="password" value={form.password} onChange={update("password")} style={inputStyle} />
+      <input placeholder={t("clubName")} value={form.club_name} onChange={update("club_name")} style={inputStyle} />
+      <input placeholder={t("country")} value={form.country} onChange={update("country")} style={inputStyle} />
+      <input placeholder={t("city")} value={form.city} onChange={update("city")} style={inputStyle} />
 
-      <button onClick={register} style={btnStyle}>Create Club</button>
+      <button onClick={register} style={btnStyle}>{t("create")}</button>
       <p style={{ marginTop: 16 }}>
-        Already have an account? <Link to="/">Login</Link>
+        <Link to="/">{t("backToLogin")}</Link>
       </p>
     </div>
   );
