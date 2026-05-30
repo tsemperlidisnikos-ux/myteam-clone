@@ -5,6 +5,7 @@ import { requireClubId } from "../utils/club";
 import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
+import { t } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Teams() {
@@ -29,15 +30,15 @@ export default function Teams() {
       setTeams(res.data);
       setFiltered(res.data);
     } catch {
-      console.error("Failed to load teams");
+      showToast("Αποτυχία φόρτωσης ομάδων", "error");
     }
   };
 
   const applyFilters = () => {
     let data = [...teams];
     if (search.trim()) {
-      data = data.filter((t) =>
-        t.name.toLowerCase().includes(search.toLowerCase())
+      data = data.filter((tm) =>
+        tm.name.toLowerCase().includes(search.toLowerCase())
       );
     }
     data.sort((a, b) =>
@@ -78,7 +79,7 @@ export default function Teams() {
   };
 
   const deleteTeam = async (id) => {
-    if (!window.confirm("Delete this team?")) return;
+    if (!window.confirm(t("confirmDeleteTeam"))) return;
     try {
       const clubId = requireClubId();
       await api.delete(`/teams/${clubId}/${id}`);
@@ -103,10 +104,10 @@ export default function Teams() {
   return (
     <div>
       <div className="page-header">
-        <h1>Teams</h1>
+        <h1>{t("teams")}</h1>
         {isAdmin && (
           <button className="btn-primary" onClick={() => setShowAdd(true)}>
-            + Add Team
+            + {t("addTeam")}
           </button>
         )}
       </div>
@@ -114,57 +115,57 @@ export default function Teams() {
       <div className="page-toolbar">
         <input
           className="page-input"
-          placeholder="Search teams..."
+          placeholder={t("searchTeams")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select className="page-select" value={sort} onChange={(e) => setSort(e.target.value)}>
-          <option value="asc">A → Z</option>
-          <option value="desc">Z → A</option>
+          <option value="asc">{t("sortAsc")}</option>
+          <option value="desc">{t("sortDesc")}</option>
         </select>
       </div>
 
       <div className="page-panel">
         {filtered.length === 0 ? (
-          <p>No teams found.</p>
+          <p>{t("noTeamsFound")}</p>
         ) : (
           <>
             <table className="page-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Category</th>
-                  <th>Actions</th>
+                  <th>{t("name")}</th>
+                  <th>{t("category")}</th>
+                  <th>{t("actions")}</th>
                 </tr>
               </thead>
               <tbody>
-                {paginated.map((t) => (
-                  <tr key={t.id}>
+                {paginated.map((tm) => (
+                  <tr key={tm.id}>
                     <td>
-                      <Link to={`/teams/${t.id}`} className="page-link">
-                        {t.name}
+                      <Link to={`/teams/${tm.id}`} className="page-link">
+                        {tm.name}
                       </Link>
                     </td>
-                    <td>{t.category || "—"}</td>
+                    <td>{tm.category || "—"}</td>
                     <td>
-                      <Link to={`/teams/${t.id}`} className="btn-blue">
-                        View
+                      <Link to={`/teams/${tm.id}`} className="btn-blue">
+                        {t("view")}
                       </Link>
                       {isAdmin && (
                         <>
                           <button
                             className="btn-blue"
                             onClick={() => {
-                              setEditTeam(t);
-                              setTeamName(t.name);
-                              setCategory(t.category || "");
+                              setEditTeam(tm);
+                              setTeamName(tm.name);
+                              setCategory(tm.category || "");
                               setShowEdit(true);
                             }}
                           >
-                            Edit
+                            {t("edit")}
                           </button>
-                          <button className="btn-red" onClick={() => deleteTeam(t.id)}>
-                            Delete
+                          <button className="btn-red" onClick={() => deleteTeam(tm.id)}>
+                            {t("delete")}
                           </button>
                         </>
                       )}
@@ -192,47 +193,47 @@ export default function Teams() {
       </div>
 
       {showAdd && (
-        <Modal title="Create Team" onClose={() => setShowAdd(false)}>
+        <Modal title={t("createTeam")} onClose={() => setShowAdd(false)}>
           <input
             className="modal-field"
-            placeholder="Team name"
+            placeholder={t("teamName")}
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
           />
           <input
             className="modal-field"
-            placeholder="Category (e.g. U16)"
+            placeholder={t("categoryHint")}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           />
           <button className="btn-primary" onClick={createTeam} style={{ marginRight: 10 }}>
-            Save
+            {t("save")}
           </button>
           <button className="btn-secondary" onClick={() => setShowAdd(false)}>
-            Cancel
+            {t("cancel")}
           </button>
         </Modal>
       )}
 
       {showEdit && (
-        <Modal title="Edit Team" onClose={() => setShowEdit(false)}>
+        <Modal title={t("editTeam")} onClose={() => setShowEdit(false)}>
           <input
             className="modal-field"
-            placeholder="Team name"
+            placeholder={t("teamName")}
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
           />
           <input
             className="modal-field"
-            placeholder="Category (e.g. U16)"
+            placeholder={t("categoryHint")}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           />
           <button className="btn-primary" onClick={updateTeam} style={{ marginRight: 10 }}>
-            Update
+            {t("update")}
           </button>
           <button className="btn-secondary" onClick={() => setShowEdit(false)}>
-            Cancel
+            {t("cancel")}
           </button>
         </Modal>
       )}

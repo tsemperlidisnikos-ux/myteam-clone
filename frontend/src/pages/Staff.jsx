@@ -4,7 +4,7 @@ import { requireClubId } from "../utils/club";
 import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
-import { t } from "../i18n/el";
+import { t, roleLabel } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Staff() {
@@ -30,7 +30,7 @@ export default function Staff() {
       const res = await api.get(`/clubs/${clubId}/users`);
       setUsers(res.data.filter((u) => u.role === "admin" || u.role === "coach"));
     } catch {
-      showToast("Failed to load staff", "error");
+      showToast("Αποτυχία φόρτωσης προσωπικού", "error");
     } finally {
       setLoading(false);
     }
@@ -52,10 +52,10 @@ export default function Staff() {
           ? { athlete_id: Number(inviteAthleteId) }
           : {}),
       });
-      showToast(res.data.message || "Invite sent", "success");
+      showToast(res.data.message || t("sendInvite"), "success");
       setInviteEmail("");
     } catch (err) {
-      showToast(err.response?.data?.error || "Invite failed", "error");
+      showToast(err.response?.data?.error || "Αποτυχία πρόσκλησης", "error");
     }
   };
 
@@ -65,21 +65,21 @@ export default function Staff() {
       await api.post(`/clubs/${clubId}/staff`, form);
       setShowAdd(false);
       setForm({ full_name: "", email: "", password: "", role: "coach" });
-      showToast("Staff member created", "success");
+      showToast("Το μέλος προστέθηκε", "success");
       load();
     } catch (err) {
-      showToast(err.response?.data?.error || "Failed to create staff", "error");
+      showToast(err.response?.data?.error || "Αποτυχία δημιουργίας", "error");
     }
   };
 
   if (!ready) {
-    return <p>Loading...</p>;
+    return <p>{t("loading")}</p>;
   }
 
   if (!isAdmin) {
     return (
       <div className="page-panel">
-        <p>Admin access required. Log out and log in again if you should be an admin.</p>
+        <p>{t("adminRequired")}</p>
       </div>
     );
   }
@@ -87,24 +87,24 @@ export default function Staff() {
   return (
     <div>
       <div className="page-header">
-        <h1>Staff</h1>
+        <h1>{t("staff")}</h1>
         <button className="btn-primary" onClick={() => setShowAdd(true)}>
-          + Add Coach
+          + {t("addCoach")}
         </button>
       </div>
 
       <div className="page-panel">
         {loading ? (
-          <p>Loading...</p>
+          <p>{t("loading")}</p>
         ) : users.length === 0 ? (
-          <p>No staff members yet.</p>
+          <p>{t("noStaffYet")}</p>
         ) : (
           <table className="page-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
+                <th>{t("name")}</th>
+                <th>{t("email")}</th>
+                <th>{t("role")}</th>
               </tr>
             </thead>
             <tbody>
@@ -113,7 +113,7 @@ export default function Staff() {
                   <td>{u.full_name}</td>
                   <td>{u.email}</td>
                   <td>
-                    <span className={`role-badge role-${u.role}`}>{u.role}</span>
+                    <span className={`role-badge role-${u.role}`}>{roleLabel(u.role)}</span>
                   </td>
                 </tr>
               ))}
@@ -123,7 +123,7 @@ export default function Staff() {
       </div>
 
       <div className="page-panel" style={{ maxWidth: 420, marginBottom: 20 }}>
-        <h2>{t("invite")} (email)</h2>
+        <h2>{t("inviteByEmail")}</h2>
         <input
           className="modal-field"
           placeholder="email@example.com"
@@ -159,23 +159,23 @@ export default function Staff() {
       </div>
 
       {showAdd && (
-        <Modal title="Add Staff Member" onClose={() => setShowAdd(false)}>
+        <Modal title={t("addStaffMember")} onClose={() => setShowAdd(false)}>
           <input
             className="modal-field"
-            placeholder="Full name"
+            placeholder={t("fullName")}
             value={form.full_name}
             onChange={(e) => setForm({ ...form, full_name: e.target.value })}
           />
           <input
             className="modal-field"
-            placeholder="Email"
+            placeholder={t("email")}
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
           <input
             type="password"
             className="modal-field"
-            placeholder="Password (min 6 chars)"
+            placeholder={t("passwordMin")}
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
@@ -184,14 +184,14 @@ export default function Staff() {
             value={form.role}
             onChange={(e) => setForm({ ...form, role: e.target.value })}
           >
-            <option value="coach">Coach</option>
-            <option value="admin">Admin</option>
+            <option value="coach">{t("roleCoach")}</option>
+            <option value="admin">{t("roleAdmin")}</option>
           </select>
           <button className="btn-primary" onClick={createStaff} style={{ marginRight: 10 }}>
-            Create
+            {t("create")}
           </button>
           <button className="btn-secondary" onClick={() => setShowAdd(false)}>
-            Cancel
+            {t("cancel")}
           </button>
         </Modal>
       )}

@@ -5,6 +5,7 @@ import { requireClubId } from "../utils/club";
 import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
+import { t } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Athletes() {
@@ -86,7 +87,7 @@ export default function Athletes() {
   };
 
   const deleteAthlete = async (id) => {
-    if (!window.confirm("Delete this athlete?")) return;
+    if (!window.confirm(t("confirmDeleteAthlete"))) return;
     try {
       const clubId = requireClubId();
       await api.delete(`/athletes/${clubId}/${id}`);
@@ -111,10 +112,10 @@ export default function Athletes() {
   return (
     <div>
       <div className="page-header">
-        <h1>Athletes</h1>
+        <h1>{t("athletes")}</h1>
         {isAdmin && (
           <button className="btn-primary" onClick={() => setShowAdd(true)}>
-            + Add Athlete
+            + {t("addAthlete")}
           </button>
         )}
       </div>
@@ -122,36 +123,33 @@ export default function Athletes() {
       <div className="page-toolbar">
         <input
           className="page-input"
-          placeholder="Search athletes..."
+          placeholder={t("searchAthletes")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select className="page-select" value={sort} onChange={(e) => setSort(e.target.value)}>
-          <option value="asc">A → Z</option>
-          <option value="desc">Z → A</option>
+          <option value="asc">{t("sortAsc")}</option>
+          <option value="desc">{t("sortDesc")}</option>
         </select>
       </div>
 
       <div className="page-panel">
         {loading ? (
-          <p>Loading athletes...</p>
+          <p>{t("loadingAthletes")}</p>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <p>No athletes found.</p>
-            <p className="empty-hint">
-              Click <strong>+ Add Athlete</strong> to create one. Then open their profile from
-              the table (name or Profile button).
-            </p>
+            <p>{t("noAthletesFound")}</p>
+            <p className="empty-hint">{t("athletesEmptyHint")}</p>
           </div>
         ) : (
           <>
             <table className="page-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Position</th>
-                  <th>Actions</th>
+                  <th>{t("name")}</th>
+                  <th>{t("email")}</th>
+                  <th>{t("position")}</th>
+                  <th>{t("actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -174,7 +172,7 @@ export default function Athletes() {
                     <td>{a.position || "—"}</td>
                     <td className="actions-cell" onClick={(e) => e.stopPropagation()}>
                       <Link to={`/athletes/${a.id}`} className="btn-blue btn-link-action">
-                        Profile
+                        {t("profile")}
                       </Link>
                       {isAdmin && (
                         <>
@@ -188,10 +186,10 @@ export default function Athletes() {
                               setShowEdit(true);
                             }}
                           >
-                            Edit
+                            {t("edit")}
                           </button>
                           <button className="btn-red" onClick={() => deleteAthlete(a.id)}>
-                            Delete
+                            {t("delete")}
                           </button>
                         </>
                       )}
@@ -219,60 +217,60 @@ export default function Athletes() {
       </div>
 
       {showAdd && (
-        <Modal title="Create Athlete" onClose={() => setShowAdd(false)}>
+        <Modal title={t("createAthlete")} onClose={() => setShowAdd(false)}>
           <input
             className="modal-field"
-            placeholder="Full name"
+            placeholder={t("fullName")}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <input
             className="modal-field"
-            placeholder="Email"
+            placeholder={t("email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <input
             className="modal-field"
-            placeholder="Position"
+            placeholder={t("position")}
             value={position}
             onChange={(e) => setPosition(e.target.value)}
           />
           <button className="btn-primary" onClick={createAthlete} style={{ marginRight: 10 }}>
-            Save
+            {t("save")}
           </button>
           <button className="btn-secondary" onClick={() => setShowAdd(false)}>
-            Cancel
+            {t("cancel")}
           </button>
         </Modal>
       )}
 
       {showEdit && (
-        <Modal title="Edit Athlete" onClose={() => setShowEdit(false)}>
+        <Modal title={t("editAthlete")} onClose={() => setShowEdit(false)}>
           <input
             className="modal-field"
-            placeholder="Name"
+            placeholder={t("name")}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <input
             className="modal-field"
-            placeholder="Email"
+            placeholder={t("email")}
             value={email}
             disabled
             style={{ background: "#f3f4f6" }}
           />
           <input
             className="modal-field"
-            placeholder="Position"
+            placeholder={t("position")}
             value={position}
             onChange={(e) => setPosition(e.target.value)}
           />
           <button className="btn-primary" onClick={updateAthlete} style={{ marginRight: 10 }}>
-            Update
+            {t("update")}
           </button>
           <button className="btn-secondary" onClick={() => setShowEdit(false)}>
-            Cancel
+            {t("cancel")}
           </button>
         </Modal>
       )}

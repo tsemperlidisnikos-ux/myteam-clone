@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { loginAsAdmin } from "./helpers.js";
 
 test("login page loads", async ({ page }) => {
   await page.goto("/");
@@ -11,14 +12,19 @@ test("forgot password page", async ({ page }) => {
 });
 
 test("login flow", async ({ page }) => {
-  const email = process.env.PLAYWRIGHT_EMAIL || "nikos.tseberlidis@gmail.com";
-  const password = process.env.PLAYWRIGHT_PASSWORD || "123456";
-
-  await page.goto("/");
-  await page.getByPlaceholder(/email/i).fill(email);
-  await page.getByPlaceholder(/κωδικ/i).fill(password);
-  await page.getByRole("button", { name: /σύνδεση/i }).click();
-
-  await expect(page).toHaveURL(/dashboard/, { timeout: 15000 });
+  await loginAsAdmin(page);
   await expect(page.getByRole("heading", { name: /αρχική/i })).toBeVisible();
+});
+
+test("calendar page after login", async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto("/calendar");
+  await expect(page.getByRole("heading", { name: /ημερολόγιο/i })).toBeVisible();
+});
+
+test("messages page after login", async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto("/messages");
+  await expect(page.getByRole("button", { name: /ανακοινώσεις/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /μηνύματα \(dm\)/i })).toBeVisible();
 });
