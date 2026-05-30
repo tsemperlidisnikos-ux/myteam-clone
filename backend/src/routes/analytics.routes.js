@@ -4,7 +4,9 @@ import {
   getTeamAnalytics,
   getAthleteAnalytics,
   getTrainingAnalytics,
-  getMatchAnalytics
+  getMatchAnalytics,
+  getClubCalendar,
+  getUpcomingEvents
 } from "../controllers/analytics.controller.js";
 
 import { authMiddleware } from "../middleware/auth.middleware.js";
@@ -20,6 +22,10 @@ router.use("/:clubId", clubAccessMiddleware);
 
 // CLUB ANALYTICS
 router.get("/:clubId/club", getClubAnalytics);
+
+// CALENDAR
+router.get("/:clubId/calendar", getClubCalendar);
+router.get("/:clubId/upcoming", getUpcomingEvents);
 
 // TEAM ANALYTICS
 router.get("/:clubId/team/:teamId", getTeamAnalytics);

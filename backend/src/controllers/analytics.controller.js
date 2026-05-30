@@ -216,3 +216,66 @@ export const getMatchAnalytics = async (req, res) => {
 
   res.json(trend.rows);
 };
+
+export const getClubCalendar = async (req, res) => {
+  const { clubId } = req.params;
+  const { from, to } = req.query;
+
+  const fromDate = from || new Date().toISOString().slice(0, 10);
+  const toDate = to || new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+
+  const trainings = await pool.query(
+    `SELECT t.id, t.date, t.start_time, t.end_time, t.location,
+            t.team_id, tm.name AS team_name, 'training' AS event_type, NULL AS opponent
+     FROM trainings t
+     JOIN teams tm ON tm.id = t.team_id
+     WHERE t.club_id = $1 AND t.date BETWEEN $2 AND $3
+     ORDER BY t.date, t.start_time`,
+    [clubId, fromDate, toDate]
+  );
+
+  const matches = await pool.query(
+    `SELECT m.id, m.date, m.start_time, NULL AS end_time, m.location,
+            m.team_id, tm.name AS team_name, 'match' AS event_type, m.opponent
+     FROM matches m
+     JOIN teams tm ON tm.id = m.team_id
+     WHERE m.club_id = $1 AND m.date BETWEEN $2 AND $3
+     ORDER BY m.date, m.start_time`,
+    [clubId, fromDate, toDate]
+  );
+
+  res.json([...trainings.rows, ...matches.rows]);
+};
+
+export const getUpcomingEvents = async (req, res) => {
+  const { clubId } = req.params;
+  const limit = Math.min(Number(req.query.limit) || 5, 20);
+
+  const trainings = await pool.query(
+    `SELECT t.id, t.date, t.start_time, t.location, tm.name AS team_name,
+            'training' AS event_type, NULL AS opponent
+     FROM trainings t
+     JOIN teams tm ON tm.id = t.team_id
+     WHERE t.club_id = $1 AND t.date >= CURRENT_DATE
+     ORDER BY t.date, t.start_time
+     LIMIT $2`,
+    [clubId, limit]
+  );
+
+  const matches = await pool.query(
+    `SELECT m.id, m.date, m.start_time, m.location, tm.name AS team_name,
+            'match' AS event_type, m.opponent
+     FROM matches m
+     JOIN teams tm ON tm.id = m.team_id
+     WHERE m.club_id = $1 AND m.date >= CURRENT_DATE
+     ORDER BY m.date, m.start_time
+     LIMIT $2`,
+    [clubId, limit]
+  );
+
+  const combined = [...trainings.rows, ...matches.rows]
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+    .slice(0, limit);
+
+  res.json(combined);
+};

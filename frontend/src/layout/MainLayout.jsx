@@ -8,8 +8,10 @@ import MatchesIcon from "../icons/MatchesIcon";
 import MessagesIcon from "../icons/MessagesIcon";
 import AnalyticsIcon from "../icons/AnalyticsIcon";
 
-import { clearSession, getClubName, getClubRole, getStoredClubs, isAdmin } from "../utils/club";
-import ToastContainer from "../components/ToastContainer";
+import { clearSession, getClubName, getStoredClubs } from "../utils/club";
+import useClubRole from "../hooks/useClubRole";
+import ThemeToggle from "../components/ThemeToggle";
+import { t } from "../i18n/el";
 
 import "./layout.css";
 
@@ -17,20 +19,32 @@ export default function MainLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const clubName = getClubName();
-  const role = getClubRole();
+  const { role, isAdmin, isAthlete, ready } = useClubRole();
 
-  const menu = [
-    { label: "Dashboard", path: "/dashboard", icon: <DashboardIcon /> },
-    { label: "Teams", path: "/teams", icon: <TeamsIcon /> },
-    { label: "Athletes", path: "/athletes", icon: <AthletesIcon /> },
-    { label: "Trainings", path: "/trainings", icon: <TrainingsIcon /> },
-    { label: "Matches", path: "/matches", icon: <MatchesIcon /> },
-    { label: "Messages", path: "/messages", icon: <MessagesIcon /> },
-    { label: "Analytics", path: "/analytics", icon: <AnalyticsIcon /> },
-  ];
+  const menu = [{ label: t("dashboard"), path: "/dashboard", icon: <DashboardIcon /> }];
 
-  if (isAdmin()) {
-    menu.push({ label: "Staff", path: "/staff", icon: <TeamsIcon /> });
+  menu.push({ label: t("calendar"), path: "/calendar", icon: <TrainingsIcon /> });
+
+  if (!isAthlete) {
+    menu.push(
+      { label: t("teams"), path: "/teams", icon: <TeamsIcon /> },
+      { label: t("athletes"), path: "/athletes", icon: <AthletesIcon /> }
+    );
+    if (ready && isAdmin) {
+      menu.push({ label: t("staff"), path: "/staff", icon: <AthletesIcon /> });
+    }
+  } else {
+    menu.push({ label: t("myProfile"), path: "/my-profile", icon: <AthletesIcon /> });
+  }
+
+  menu.push(
+    { label: t("trainings"), path: "/trainings", icon: <TrainingsIcon /> },
+    { label: t("matches"), path: "/matches", icon: <MatchesIcon /> },
+    { label: t("messages"), path: "/messages", icon: <MessagesIcon /> }
+  );
+
+  if (!isAthlete) {
+    menu.push({ label: t("analytics"), path: "/analytics", icon: <AnalyticsIcon /> });
   }
 
   const logout = () => {
@@ -53,7 +67,7 @@ export default function MainLayout({ children }) {
         <h2 className="logo">MyTeam</h2>
         <p className="club-label">
           {clubName}
-          {role ? ` · ${role}` : ""}
+          {role ? ` · ${role}` : ready ? "" : " · …"}
         </p>
 
         <nav className="menu">
@@ -75,13 +89,14 @@ export default function MainLayout({ children }) {
         </nav>
 
         <div className="sidebar-footer">
+          <ThemeToggle />
           <Link
             to="/settings"
             className={
               location.pathname === "/settings" ? "menu-item active" : "menu-item"
             }
           >
-            Settings
+            {t("settings")}
           </Link>
           {getStoredClubs().length > 1 && (
             <button type="button" className="sidebar-btn" onClick={switchClub}>
@@ -89,13 +104,12 @@ export default function MainLayout({ children }) {
             </button>
           )}
           <button type="button" className="sidebar-btn logout" onClick={logout}>
-            Logout
+            {t("logout")}
           </button>
         </div>
       </aside>
 
       <main className="content">{children}</main>
-      <ToastContainer />
     </div>
   );
 }

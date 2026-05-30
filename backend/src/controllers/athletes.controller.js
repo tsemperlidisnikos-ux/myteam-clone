@@ -118,9 +118,15 @@ export const getAthleteProfile = async (req, res) => {
   res.json(result.rows[0]);
 };
 
-// UPDATE athlete profile
+// UPDATE athlete profile (athletes may only edit their own)
 export const updateAthleteProfile = async (req, res) => {
-  const { athleteId } = req.params;
+  const { clubId, athleteId } = req.params;
+  const role = req.user.role;
+  const myId = req.user.user_id;
+
+  if (role === "athlete" && Number(athleteId) !== myId) {
+    return res.status(403).json({ error: "You can only edit your own profile" });
+  }
   const {
     full_name,
     date_of_birth,
@@ -204,6 +210,22 @@ export const getAthleteTeams = async (req, res) => {
   );
 
   res.json(result.rows);
+};
+
+export const getMyAthleteProfile = async (req, res) => {
+  const { clubId } = req.params;
+  const userId = req.user.user_id;
+
+  const membership = await pool.query(
+    `SELECT 1 FROM club_users WHERE club_id = $1 AND user_id = $2 AND role = 'athlete'`,
+    [clubId, userId]
+  );
+  if (membership.rows.length === 0) {
+    return res.status(404).json({ error: "No athlete profile for this account" });
+  }
+
+  req.params.athleteId = String(userId);
+  return getAthleteProfile(req, res);
 };
 
 // DELETE athlete from club

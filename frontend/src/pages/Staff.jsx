@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
-import { requireClubId, isAdmin } from "../utils/club";
+import { requireClubId } from "../utils/club";
+import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
 export default function Staff() {
+  const { isAdmin, ready } = useClubRole();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -46,8 +48,16 @@ export default function Staff() {
     }
   };
 
-  if (!isAdmin()) {
-    return <p>Admin access required.</p>;
+  if (!ready) {
+    return <p>Loading...</p>;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="page-panel">
+        <p>Admin access required. Log out and log in again if you should be an admin.</p>
+      </div>
+    );
   }
 
   return (

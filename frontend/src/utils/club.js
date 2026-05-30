@@ -35,6 +35,44 @@ export function getStoredClubs() {
   }
 }
 
+export function syncClubRoleFromStorage() {
+  const existing = localStorage.getItem("clubRole");
+  if (existing) return existing;
+
+  const clubId = getClubId();
+  if (!clubId) return "";
+
+  const club = getStoredClubs().find((c) => String(c.club_id) === String(clubId));
+  if (club?.role) {
+    localStorage.setItem("clubRole", club.role);
+    return club.role;
+  }
+  return "";
+}
+
+export async function refreshClubRole() {
+  const fromStorage = syncClubRoleFromStorage();
+  if (fromStorage) return fromStorage;
+
+  const clubId = getClubId();
+  const userRaw = localStorage.getItem("user");
+  if (!clubId || !userRaw) return "";
+
+  try {
+    const { default: api } = await import("../api/axios.js");
+    const user = JSON.parse(userRaw);
+    const res = await api.get(`/clubs/${clubId}/users`);
+    const me = res.data.find((u) => u.id === user.id);
+    if (me?.role) {
+      localStorage.setItem("clubRole", me.role);
+      return me.role;
+    }
+  } catch {
+    // ignore
+  }
+  return getClubRole();
+}
+
 export function requireClubId() {
   const clubId = getClubId();
   if (!clubId) {
@@ -44,7 +82,7 @@ export function requireClubId() {
 }
 
 export function getClubRole() {
-  return localStorage.getItem("clubRole") || "";
+  return localStorage.getItem("clubRole") || syncClubRoleFromStorage();
 }
 
 export function isAdmin() {

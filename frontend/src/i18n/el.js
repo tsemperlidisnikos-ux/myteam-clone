@@ -1,0 +1,33 @@
+export const el = {
+  dashboard: "Αρχική",
+  teams: "Ομάδες",
+  athletes: "Αθλητές",
+  staff: "Προσωπικό",
+  trainings: "Προπονήσεις",
+  matches: "Αγώνες",
+  messages: "Μηνύματα",
+  analytics: "Στατιστικά",
+  calendar: "Ημερολόγιο",
+  settings: "Ρυθμίσεις",
+  logout: "Έξοδος",
+  export: "Εξαγωγή CSV",
+  addCoach: "Προσθήκη Προπονητή",
+  save: "Αποθήκευση",
+  cancel: "Ακύρωση",
+  loading: "Φόρτωση...",
+  forgotPassword: "Ξέχασα τον κωδικό",
+  resetPassword: "Νέος κωδικός",
+  sendResetLink: "Αποστολή link",
+  darkMode: "Σκοτεινό θέμα",
+  lightMode: "Φωτεινό θέμα",
+  myProfile: "Το προφίλ μου",
+  upcoming: "Επόμενα",
+  listView: "Λίστα",
+  gridView: "Πλέγμα",
+  welcome: "Καλώς ήρθες",
+  quickActions: "Γρήγορες ενέργειες",
+};
+
+export function t(key) {
+  return el[key] || key;
+}

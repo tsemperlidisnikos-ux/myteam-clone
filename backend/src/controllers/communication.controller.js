@@ -16,7 +16,27 @@ export const createAnnouncement = async (req, res) => {
     [clubId, req.user.user_id, title, message, target_type, target_id]
   );
 
-  res.json(result.rows[0]);
+  const announcement = result.rows[0];
+
+  if (target_type === "club") {
+    await pool.query(
+      `INSERT INTO notifications (user_id, title, body)
+       SELECT cu.user_id, $1, $2
+       FROM club_users cu
+       WHERE cu.club_id = $3 AND cu.user_id != $4`,
+      [title, message, clubId, req.user.user_id]
+    );
+  } else if (target_type === "team" && target_id) {
+    await pool.query(
+      `INSERT INTO notifications (user_id, title, body)
+       SELECT ta.user_id, $1, $2
+       FROM team_athletes ta
+       WHERE ta.team_id = $3 AND ta.user_id != $4`,
+      [title, message, target_id, req.user.user_id]
+    );
+  }
+
+  res.json(announcement);
 };
 
 export const getAnnouncements = async (req, res) => {
@@ -138,4 +158,19 @@ export const markAllNotificationsRead = async (req, res) => {
   );
 
   res.json({ message: "All marked as read" });
+};
+
+export const getMessageContacts = async (req, res) => {
+  const { clubId } = req.params;
+
+  const result = await pool.query(
+    `SELECT u.id, u.full_name, u.email, cu.role
+     FROM club_users cu
+     JOIN users u ON u.id = cu.user_id
+     WHERE cu.club_id = $1 AND u.id != $2
+     ORDER BY u.full_name`,
+    [clubId, req.user.user_id]
+  );
+
+  res.json(result.rows);
 };

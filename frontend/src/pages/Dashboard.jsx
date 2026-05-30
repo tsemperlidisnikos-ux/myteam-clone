@@ -2,19 +2,27 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId, getClubName } from "../utils/club";
+import useClubRole from "../hooks/useClubRole";
 import Card from "../components/Card";
+import { t } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
+  const [upcoming, setUpcoming] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isAdmin, isStaff, isAthlete, ready } = useClubRole();
 
   useEffect(() => {
     const load = async () => {
       try {
         const clubId = requireClubId();
-        const res = await api.get(`/analytics/${clubId}/club`);
-        setStats(res.data);
+        const [statsRes, upRes] = await Promise.all([
+          api.get(`/analytics/${clubId}/club`),
+          api.get(`/analytics/${clubId}/upcoming?limit=5`),
+        ]);
+        setStats(statsRes.data);
+        setUpcoming(upRes.data);
       } catch {
         console.error("Failed to load dashboard stats");
       } finally {
@@ -29,52 +37,111 @@ export default function Dashboard() {
       ? `${stats.wins}W – ${stats.losses}L`
       : "—";
 
+  const eventLink = (e) =>
+    e.event_type === "training" ? `/trainings/${e.id}` : `/matches/${e.id}`;
+
   return (
     <div>
       <div className="page-header">
         <div>
-          <h1>Dashboard</h1>
-          <p className="page-subtitle">Welcome to {getClubName()}!</p>
+          <h1>{t("dashboard")}</h1>
+          <p className="page-subtitle">
+            {t("welcome")} {getClubName()}!
+          </p>
         </div>
       </div>
 
       {loading ? (
-        <p>Loading stats...</p>
+        <p>{t("loading")}</p>
       ) : stats ? (
         <>
-          <div className="stat-grid">
-            <Card label="Athletes" value={stats.athletes} />
-            <Card label="Coaches" value={stats.coaches} />
-            <Card label="Teams" value={stats.teams} />
-            <Card label="Trainings" value={stats.trainings} />
-            <Card label="Upcoming" value={stats.upcoming_trainings} suffix=" sessions" />
-            <Card label="Matches" value={stats.matches} />
-            <Card label="Attendance" value={stats.attendance_rate ?? 0} suffix="%" />
-            <Card label="Record" value={record} />
-          </div>
+          {!isAthlete && (
+            <div className="stat-grid">
+              <Card label={t("athletes")} value={stats.athletes} />
+              <Card label="Coaches" value={stats.coaches} />
+              <Card label={t("teams")} value={stats.teams} />
+              <Card label={t("trainings")} value={stats.trainings} />
+              <Card label="Upcoming" value={stats.upcoming_trainings} suffix=" sessions" />
+              <Card label={t("matches")} value={stats.matches} />
+              <Card label="Attendance" value={stats.attendance_rate ?? 0} suffix="%" />
+              <Card label="Record" value={record} />
+            </div>
+          )}
 
-          <h2 style={{ marginTop: 32, marginBottom: 12 }}>Quick Actions</h2>
+          {upcoming.length > 0 && (
+            <div className="page-panel" style={{ marginTop: 24 }}>
+              <h2>{t("upcoming")}</h2>
+              <ul className="calendar-events">
+                {upcoming.map((e) => (
+                  <li key={`${e.event_type}-${e.id}`} className={`cal-event cal-${e.event_type}`}>
+                    <span>{e.event_type === "training" ? "🏀" : "🏆"}</span>
+                    <strong>
+                      {String(e.date).slice(0, 10)}
+                      {e.start_time ? ` ${String(e.start_time).slice(0, 5)}` : ""}
+                    </strong>
+                    {" — "}
+                    {e.team_name}
+                    {e.opponent ? ` vs ${e.opponent}` : ""}
+                    {" · "}
+                    <Link to={eventLink(e)} className="page-link">
+                      Άνοιγμα
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <h2 style={{ marginTop: 32, marginBottom: 12 }}>{t("quickActions")}</h2>
           <div className="quick-actions">
-            <Link to="/teams" className="quick-action-card">
-              <strong>Teams</strong>
-              <span>Manage rosters & coaches</span>
-            </Link>
-            <Link to="/athletes" className="quick-action-card">
-              <strong>Athletes</strong>
-              <span>Add or edit profiles</span>
-            </Link>
+            {!isAthlete && (
+              <>
+                <Link to="/teams" className="quick-action-card">
+                  <strong>{t("teams")}</strong>
+                  <span>Rosters & coaches</span>
+                </Link>
+                <Link to="/athletes" className="quick-action-card">
+                  <strong>{t("athletes")}</strong>
+                  <span>Profiles</span>
+                </Link>
+              </>
+            )}
+            {isAthlete && (
+              <Link to="/my-profile" className="quick-action-card">
+                <strong>{t("myProfile")}</strong>
+                <span>View & edit</span>
+              </Link>
+            )}
             <Link to="/trainings" className="quick-action-card">
-              <strong>Trainings</strong>
+              <strong>{t("trainings")}</strong>
               <span>Schedule & attendance</span>
             </Link>
             <Link to="/matches" className="quick-action-card">
-              <strong>Matches</strong>
+              <strong>{t("matches")}</strong>
               <span>Fixtures & scores</span>
             </Link>
-            <Link to="/analytics" className="quick-action-card">
-              <strong>Analytics</strong>
-              <span>Club & team stats</span>
+            {!isAthlete && (
+              <Link to="/analytics" className="quick-action-card">
+                <strong>{t("analytics")}</strong>
+                <span>Club stats</span>
+              </Link>
+            )}
+            <Link to="/calendar" className="quick-action-card">
+              <strong>{t("calendar")}</strong>
+              <span>Προπονήσεις & αγώνες</span>
             </Link>
+            {ready && isAdmin && (
+              <Link to="/staff" className="quick-action-card">
+                <strong>{t("staff")}</strong>
+                <span>Add coaches</span>
+              </Link>
+            )}
+            {ready && isStaff && (
+              <Link to="/messages" className="quick-action-card">
+                <strong>{t("messages")}</strong>
+                <span>Announcements & DM</span>
+              </Link>
+            )}
           </div>
         </>
       ) : (

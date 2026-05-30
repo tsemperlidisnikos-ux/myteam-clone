@@ -4,6 +4,7 @@ import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import useTeams from "../hooks/useTeams";
 import Modal from "../components/Modal";
+import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
 export default function Trainings() {
@@ -29,7 +30,7 @@ export default function Trainings() {
       const res = await api.get(`/trainings/${clubId}?team_id=${selectedTeamId}`);
       setTrainings(res.data);
     } catch {
-      alert("Failed to load trainings");
+      showToast("Αποτυχία φόρτωσης προπονήσεων", "error");
     }
   };
 
@@ -54,7 +55,7 @@ export default function Trainings() {
       setForm({ date: "", start_time: "", end_time: "", location: "", notes: "" });
       loadTrainings(teamId);
     } catch {
-      alert("Failed to create training");
+      showToast("Αποτυχία δημιουργίας προπόνησης", "error");
     }
   };
 

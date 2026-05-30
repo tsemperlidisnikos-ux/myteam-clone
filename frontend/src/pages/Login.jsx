@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { handleAuthSuccess } from "../utils/auth";
+import { showToast } from "../utils/toast";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function Login() {
             (err.code === "ERR_NETWORK"
               ? "Δεν συνδέεται το backend. Τρέξε npm run dev στο backend (port 5000)."
               : "Login failed");
-      alert(msg);
+      showToast(msg, "error");
     }
   };
 
@@ -45,6 +46,9 @@ export default function Login() {
 
       <button onClick={login} style={btnStyle}>Login</button>
 
+      <p style={{ marginTop: 12 }}>
+        <Link to="/forgot-password">Ξέχασα τον κωδικό</Link>
+      </p>
       <p style={{ marginTop: 16 }}>
         New club? <Link to="/register">Register Club</Link>
       </p>

@@ -3,6 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import { showToast } from "../utils/toast";
+import { downloadCsv } from "../utils/csv";
+import { t } from "../i18n/el";
+import useClubRole from "../hooks/useClubRole";
 import "../styles/page.css";
 
 const STAT_FIELDS = [
@@ -29,6 +32,7 @@ const emptyStats = () => ({
 
 export default function MatchDetail() {
   const { matchId } = useParams();
+  const { isStaff } = useClubRole();
   const [match, setMatch] = useState(null);
   const [roster, setRoster] = useState([]);
   const [statRows, setStatRows] = useState({});
@@ -203,43 +207,68 @@ export default function MatchDetail() {
 
       <div className="page-panel score-panel">
         <h2>Score</h2>
-        <div className="score-form">
-          <label>
-            Us
-            <input
-              type="number"
-              min="0"
-              className="stats-input score-input"
-              value={scoreForm.our_score}
-              onChange={(e) => setScoreForm({ ...scoreForm, our_score: e.target.value })}
-            />
-          </label>
-          <span className="score-sep">–</span>
-          <label>
-            Them
-            <input
-              type="number"
-              min="0"
-              className="stats-input score-input"
-              value={scoreForm.opponent_score}
-              onChange={(e) =>
-                setScoreForm({ ...scoreForm, opponent_score: e.target.value })
-              }
-            />
-          </label>
-          <button className="btn-primary" onClick={saveScore}>
-            Update Score
-          </button>
-        </div>
+        {isStaff ? (
+          <div className="score-form">
+            <label>
+              Us
+              <input
+                type="number"
+                min="0"
+                className="stats-input score-input"
+                value={scoreForm.our_score}
+                onChange={(e) => setScoreForm({ ...scoreForm, our_score: e.target.value })}
+              />
+            </label>
+            <span className="score-sep">–</span>
+            <label>
+              Them
+              <input
+                type="number"
+                min="0"
+                className="stats-input score-input"
+                value={scoreForm.opponent_score}
+                onChange={(e) =>
+                  setScoreForm({ ...scoreForm, opponent_score: e.target.value })
+                }
+              />
+            </label>
+            <button className="btn-primary" onClick={saveScore}>
+              Update Score
+            </button>
+          </div>
+        ) : (
+          <p className="score-display">
+            {match.our_score ?? "—"} – {match.opponent_score ?? "—"}
+          </p>
+        )}
       </div>
 
       <div className="page-header" style={{ marginTop: 24 }}>
         <h2>Player Stats</h2>
-        {rosterIds.length > 0 && (
-          <button className="btn-primary" onClick={saveAllStats} disabled={savingAll}>
-            {savingAll ? "Saving..." : "Save All"}
-          </button>
-        )}
+        <div>
+          {rosterIds.length > 0 && (
+            <button
+              className="btn-secondary btn-sm"
+              style={{ marginRight: 8 }}
+              onClick={() =>
+                downloadCsv(
+                  `match-${dateStr}-stats.csv`,
+                  roster.map((a) => ({
+                    player: a.full_name,
+                    ...statRows[a.id],
+                  }))
+                )
+              }
+            >
+              {t("export")}
+            </button>
+          )}
+          {isStaff && rosterIds.length > 0 && (
+            <button className="btn-primary" onClick={saveAllStats} disabled={savingAll}>
+              {savingAll ? "Saving..." : "Save All"}
+            </button>
+          )}
+        </div>
       </div>
 
       {message && <p className="form-success">{message}</p>}
@@ -277,23 +306,29 @@ export default function MatchDetail() {
                     </td>
                     {STAT_FIELDS.map((f) => (
                       <td key={f.key}>
-                        <input
-                          type="number"
-                          min="0"
-                          className="stats-input"
-                          value={statRows[a.id]?.[f.key] ?? 0}
-                          onChange={(e) => updateStat(a.id, f.key, e.target.value)}
-                        />
+                        {isStaff ? (
+                          <input
+                            type="number"
+                            min="0"
+                            className="stats-input"
+                            value={statRows[a.id]?.[f.key] ?? 0}
+                            onChange={(e) => updateStat(a.id, f.key, e.target.value)}
+                          />
+                        ) : (
+                          statRows[a.id]?.[f.key] ?? 0
+                        )}
                       </td>
                     ))}
                     <td>
-                      <button
-                        className="btn-blue"
-                        onClick={() => saveStats(a.id)}
-                        disabled={savingId === a.id}
-                      >
-                        {savingId === a.id ? "..." : "Save"}
-                      </button>
+                      {isStaff && (
+                        <button
+                          className="btn-blue"
+                          onClick={() => saveStats(a.id)}
+                          disabled={savingId === a.id}
+                        >
+                          {savingId === a.id ? "..." : "Save"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

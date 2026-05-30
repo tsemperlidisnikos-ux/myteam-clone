@@ -1,3 +1,5 @@
+import { showToast } from "./toast";
+
 export function handleAuthSuccess(data, navigate) {
   const { token, user, club, clubs } = data;
 
@@ -19,6 +21,6 @@ export function handleAuthSuccess(data, navigate) {
   } else if (clubList.length > 1) {
     navigate("/choose-club");
   } else {
-    alert("No club assigned to this account");
+    showToast("Δεν υπάρχει σύλλογος σε αυτόν τον λογαριασμό", "error");
   }
 }

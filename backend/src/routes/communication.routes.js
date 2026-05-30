@@ -7,7 +7,8 @@ import {
   createNotification,
   getNotifications,
   markNotificationRead,
-  markAllNotificationsRead
+  markAllNotificationsRead,
+  getMessageContacts
 } from "../controllers/communication.controller.js";
 
 import { authMiddleware } from "../middleware/auth.middleware.js";
@@ -20,6 +21,7 @@ router.use(authMiddleware);
 
 router.post("/:clubId/announcements", clubAccessMiddleware, staffOnly, createAnnouncement);
 router.get("/:clubId/announcements", clubAccessMiddleware, getAnnouncements);
+router.get("/:clubId/contacts", clubAccessMiddleware, getMessageContacts);
 
 router.post("/messages", sendMessage);
 router.get("/messages/:userId", getConversation);

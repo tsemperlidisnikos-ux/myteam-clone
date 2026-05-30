@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { handleAuthSuccess } from "../utils/auth";
+import { showToast } from "../utils/toast";
 
 export default function RegisterClub() {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export default function RegisterClub() {
         (err.code === "ERR_NETWORK"
           ? "Cannot reach backend. Is npm run dev running on port 5000?"
           : "Registration failed");
-      alert(msg);
+      showToast(msg, "error");
     }
   };
 

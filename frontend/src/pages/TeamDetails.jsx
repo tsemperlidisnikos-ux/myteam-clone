@@ -3,6 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import Modal from "../components/Modal";
+import { downloadCsv } from "../utils/csv";
+import { t } from "../i18n/el";
+import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
 export default function TeamDetails() {
@@ -30,7 +33,7 @@ export default function TeamDetails() {
       setClubAthletes(athletesRes.data);
       setClubUsers(usersRes.data);
     } catch {
-      alert("Failed to load team");
+      showToast("Αποτυχία φόρτωσης ομάδας", "error");
     } finally {
       setLoading(false);
     }
@@ -52,7 +55,7 @@ export default function TeamDetails() {
       setSelectedAthleteId("");
       load();
     } catch {
-      alert("Failed to add athlete");
+      showToast("Αποτυχία προσθήκης αθλητή", "error");
     } finally {
       setBusy(false);
     }
@@ -65,7 +68,7 @@ export default function TeamDetails() {
       await api.delete(`/teams/${clubId}/${teamId}/athletes/${userId}`);
       load();
     } catch {
-      alert("Failed to remove athlete");
+      showToast("Αποτυχία αφαίρεσης αθλητή", "error");
     }
   };
 
@@ -81,7 +84,7 @@ export default function TeamDetails() {
       setSelectedCoachId("");
       load();
     } catch {
-      alert("Failed to add coach");
+      showToast("Αποτυχία προσθήκης προπονητή", "error");
     } finally {
       setBusy(false);
     }
@@ -94,7 +97,7 @@ export default function TeamDetails() {
       await api.delete(`/teams/${clubId}/${teamId}/coaches/${userId}`);
       load();
     } catch {
-      alert("Failed to remove coach");
+      showToast("Αποτυχία αφαίρεσης προπονητή", "error");
     }
   };
 
@@ -109,6 +112,14 @@ export default function TeamDetails() {
   const availableCoaches = clubUsers.filter(
     (u) => (u.role === "coach" || u.role === "admin") && !coachIds.has(u.id)
   );
+
+  const exportRoster = () => {
+    if (!data?.athletes?.length) return;
+    downloadCsv(
+      `${data.team.name}-roster.csv`,
+      data.athletes.map((a) => ({ name: a.full_name, email: a.email }))
+    );
+  };
 
   return (
     <div>
@@ -172,13 +183,20 @@ export default function TeamDetails() {
         <div className="page-panel">
           <div className="section-header">
             <h2>Roster ({athletes.length})</h2>
-            <button
-              className="btn-primary btn-sm"
-              onClick={() => setShowAddAthlete(true)}
-              disabled={availableAthletes.length === 0}
-            >
-              + Add Athlete
-            </button>
+            <div>
+              {athletes.length > 0 && (
+                <button className="btn-secondary btn-sm" onClick={exportRoster} style={{ marginRight: 8 }}>
+                  {t("export")}
+                </button>
+              )}
+              <button
+                className="btn-primary btn-sm"
+                onClick={() => setShowAddAthlete(true)}
+                disabled={availableAthletes.length === 0}
+              >
+                + Add Athlete
+              </button>
+            </div>
           </div>
           {athletes.length === 0 ? (
             <p>No athletes on this team. Add athletes from your club roster.</p>

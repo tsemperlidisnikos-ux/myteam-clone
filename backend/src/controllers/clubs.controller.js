@@ -107,3 +107,15 @@ export const changeUserRole = async (req, res) => {
 
   res.json(result.rows[0]);
 };
+
+export const uploadClubLogo = async (req, res) => {
+  const { clubId } = req.params;
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+  const logo_url = `/uploads/${req.file.filename}`;
+  const result = await pool.query(
+    `UPDATE clubs SET logo_url = $1 WHERE id = $2 RETURNING *`,
+    [logo_url, clubId]
+  );
+  res.json(result.rows[0]);
+};

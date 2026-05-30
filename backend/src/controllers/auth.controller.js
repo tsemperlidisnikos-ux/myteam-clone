@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import crypto from "node:crypto";
 import { pool } from "../db/pool.js";
 import { signToken } from "../utils/jwt.js";
 
@@ -124,4 +125,62 @@ export const changePassword = async (req, res) => {
   await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [password_hash, userId]);
 
   res.json({ message: "Password updated" });
+};
+
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email is required" });
+
+  const userResult = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+  const user = userResult.rows[0];
+
+  if (!user) {
+    return res.json({ message: "If that email exists, a reset link was sent." });
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + 3600000);
+
+  await pool.query(
+    `INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)`,
+    [user.id, token, expires]
+  );
+
+  const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password?token=${token}`;
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[dev] Password reset link:", resetUrl);
+  }
+
+  res.json({
+    message: "If that email exists, a reset link was sent.",
+    ...(process.env.NODE_ENV !== "production" ? { reset_url: resetUrl, token } : {}),
+  });
+};
+
+export const resetPassword = async (req, res) => {
+  const { token, new_password } = req.body;
+  if (!token || !new_password) {
+    return res.status(400).json({ error: "Token and new password are required" });
+  }
+  if (new_password.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters" });
+  }
+
+  const row = await pool.query(
+    `SELECT * FROM password_reset_tokens
+     WHERE token = $1 AND used_at IS NULL AND expires_at > NOW()`,
+    [token]
+  );
+  const reset = row.rows[0];
+  if (!reset) return res.status(400).json({ error: "Invalid or expired reset token" });
+
+  const password_hash = await bcrypt.hash(new_password, 10);
+  await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
+    password_hash,
+    reset.user_id,
+  ]);
+  await pool.query("UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1", [reset.id]);
+
+  res.json({ message: "Password reset successful. You can log in now." });
 };

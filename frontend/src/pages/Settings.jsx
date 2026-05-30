@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../api/axios";
+import useClubRole from "../hooks/useClubRole";
 import "../styles/page.css";
 
 export default function Settings() {
+  const { role, isAdmin, ready } = useClubRole();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -46,6 +49,44 @@ export default function Settings() {
       <div className="page-header">
         <h1>Settings</h1>
       </div>
+
+      <div className="page-panel" style={{ maxWidth: 420, marginBottom: 20 }}>
+        <h2>Account</h2>
+        <p>
+          <strong>Role:</strong>{" "}
+          {ready ? role || "unknown — try logging out and back in" : "loading…"}
+        </p>
+        {ready && isAdmin && (
+          <Link to="/staff" className="btn-primary" style={{ display: "inline-block", marginTop: 12 }}>
+            Manage Staff → Add Coach
+          </Link>
+        )}
+      </div>
+
+      {ready && isAdmin && (
+        <div className="page-panel" style={{ maxWidth: 420, marginBottom: 20 }}>
+          <h2>Club Logo</h2>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const clubId = localStorage.getItem("clubId");
+              const fd = new FormData();
+              fd.append("logo", file);
+              try {
+                await api.post(`/clubs/${clubId}/logo`, fd, {
+                  headers: { "Content-Type": "multipart/form-data" },
+                });
+                setMessage("Logo uploaded");
+              } catch {
+                setError("Logo upload failed");
+              }
+            }}
+          />
+        </div>
+      )}
 
       <div className="page-panel" style={{ maxWidth: 420 }}>
         <h2>Change Password</h2>

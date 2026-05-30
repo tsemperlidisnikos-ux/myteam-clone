@@ -1,9 +1,16 @@
 import { Navigate } from "react-router-dom";
-import { isAdmin } from "../utils/club";
+import useClubRole from "../hooks/useClubRole";
 
 export default function AdminRoute({ children }) {
-  if (!isAdmin()) {
+  const { isAdmin, ready } = useClubRole();
+
+  if (!ready) {
+    return <p>Loading...</p>;
+  }
+
+  if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
+
   return children;
 }

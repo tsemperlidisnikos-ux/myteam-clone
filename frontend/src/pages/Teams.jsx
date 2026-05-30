@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
-import { requireClubId, isAdmin } from "../utils/club";
+import { requireClubId } from "../utils/club";
+import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
+import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
 export default function Teams() {
+  const { isAdmin } = useClubRole();
   const [teams, setTeams] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
@@ -53,7 +56,7 @@ export default function Teams() {
       setShowAdd(false);
       loadTeams();
     } catch {
-      alert("Failed to create team");
+      showToast("Αποτυχία δημιουργίας ομάδας", "error");
     }
   };
 
@@ -70,7 +73,7 @@ export default function Teams() {
       setCategory("");
       loadTeams();
     } catch {
-      alert("Failed to update team");
+      showToast("Αποτυχία ενημέρωσης ομάδας", "error");
     }
   };
 
@@ -81,7 +84,7 @@ export default function Teams() {
       await api.delete(`/teams/${clubId}/${id}`);
       loadTeams();
     } catch {
-      alert("Failed to delete team");
+      showToast("Αποτυχία διαγραφής ομάδας", "error");
     }
   };
 
@@ -101,7 +104,7 @@ export default function Teams() {
     <div>
       <div className="page-header">
         <h1>Teams</h1>
-        {isAdmin() && (
+        {isAdmin && (
           <button className="btn-primary" onClick={() => setShowAdd(true)}>
             + Add Team
           </button>
@@ -147,7 +150,7 @@ export default function Teams() {
                       <Link to={`/teams/${t.id}`} className="btn-blue">
                         View
                       </Link>
-                      {isAdmin() && (
+                      {isAdmin && (
                         <>
                           <button
                             className="btn-blue"

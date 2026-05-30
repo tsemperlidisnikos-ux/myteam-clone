@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
-import { requireClubId, isAdmin } from "../utils/club";
+import { requireClubId } from "../utils/club";
+import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
+import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
 export default function Athletes() {
+  const { isAdmin } = useClubRole();
   const navigate = useNavigate();
   const [athletes, setAthletes] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -30,7 +33,7 @@ export default function Athletes() {
       setAthletes(res.data);
       setFiltered(res.data);
     } catch {
-      alert("Failed to load athletes");
+      showToast("Αποτυχία φόρτωσης αθλητών", "error");
     } finally {
       setLoading(false);
     }
@@ -63,7 +66,7 @@ export default function Athletes() {
       loadAthletes();
     } catch (err) {
       const msg = err.response?.data?.error;
-      alert(msg || "Failed to create athlete");
+      showToast(msg || "Αποτυχία δημιουργίας αθλητή", "error");
     }
   };
 
@@ -78,7 +81,7 @@ export default function Athletes() {
       setPosition("");
       loadAthletes();
     } catch {
-      alert("Failed to update athlete");
+      showToast("Αποτυχία ενημέρωσης αθλητή", "error");
     }
   };
 
@@ -89,7 +92,7 @@ export default function Athletes() {
       await api.delete(`/athletes/${clubId}/${id}`);
       loadAthletes();
     } catch {
-      alert("Failed to delete athlete");
+      showToast("Αποτυχία διαγραφής αθλητή", "error");
     }
   };
 
@@ -109,7 +112,7 @@ export default function Athletes() {
     <div>
       <div className="page-header">
         <h1>Athletes</h1>
-        {isAdmin() && (
+        {isAdmin && (
           <button className="btn-primary" onClick={() => setShowAdd(true)}>
             + Add Athlete
           </button>
@@ -173,7 +176,7 @@ export default function Athletes() {
                       <Link to={`/athletes/${a.id}`} className="btn-blue btn-link-action">
                         Profile
                       </Link>
-                      {isAdmin() && (
+                      {isAdmin && (
                         <>
                           <button
                             className="btn-blue"

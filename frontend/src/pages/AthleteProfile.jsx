@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId } from "../utils/club";
+import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
 const emptyForm = {
@@ -84,7 +85,7 @@ export default function AthleteProfile() {
       setEditing(false);
       load();
     } catch {
-      alert("Failed to save profile");
+      showToast("Αποτυχία αποθήκευσης προφίλ", "error");
     } finally {
       setSaving(false);
     }

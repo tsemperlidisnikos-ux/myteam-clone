@@ -2,14 +2,18 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId } from "../utils/club";
+import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
+import { downloadCsv } from "../utils/csv";
+import { t } from "../i18n/el";
 import "../styles/page.css";
 
 const STATUSES = ["present", "absent", "late"];
 
 export default function TrainingDetail() {
   const { trainingId } = useParams();
+  const { isStaff } = useClubRole();
   const [training, setTraining] = useState(null);
   const [attendance, setAttendance] = useState([]);
   const [exercises, setExercises] = useState([]);
@@ -163,7 +167,22 @@ export default function TrainingDetail() {
         )}
       </div>
 
-      <h2 style={{ marginBottom: 12 }}>Attendance</h2>
+      <div className="page-header" style={{ marginTop: 24 }}>
+        <h2>Παρουσίες</h2>
+        {attendance.length > 0 && (
+          <button
+            className="btn-secondary btn-sm"
+            onClick={() =>
+              downloadCsv(
+                `attendance-${dateStr}.csv`,
+                attendance.map((a) => ({ athlete: a.full_name, status: a.status }))
+              )
+            }
+          >
+            {t("export")}
+          </button>
+        )}
+      </div>
 
       <div className="page-panel">
         {attendance.length === 0 ? (
@@ -195,19 +214,23 @@ export default function TrainingDetail() {
                     <span className={`status-badge status-${a.status}`}>{a.status}</span>
                   </td>
                   <td className="attendance-actions">
-                    {STATUSES.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        className={
-                          a.status === s ? `attendance-btn active-${s}` : "attendance-btn"
-                        }
-                        disabled={saving === a.id}
-                        onClick={() => markAttendance(a.id, s)}
-                      >
-                        {s}
-                      </button>
-                    ))}
+                    {isStaff ? (
+                      STATUSES.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          className={
+                            a.status === s ? `attendance-btn active-${s}` : "attendance-btn"
+                          }
+                          disabled={saving === a.id}
+                          onClick={() => markAttendance(a.id, s)}
+                        >
+                          {s}
+                        </button>
+                      ))
+                    ) : (
+                      "—"
+                    )}
                   </td>
                 </tr>
               ))}

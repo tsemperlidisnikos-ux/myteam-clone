@@ -4,6 +4,8 @@ import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import useTeams from "../hooks/useTeams";
 import Card from "../components/Card";
+import { downloadCsv } from "../utils/csv";
+import { t } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Analytics() {
@@ -60,9 +62,39 @@ export default function Analytics() {
     else setSearchParams({});
   };
 
+  const exportClubCsv = () => {
+    if (!clubStats) return;
+    downloadCsv("club-stats.csv", [
+      {
+        athletes: clubStats.athletes,
+        coaches: clubStats.coaches,
+        teams: clubStats.teams,
+        trainings: clubStats.trainings,
+        attendance_rate: clubStats.attendance_rate,
+        wins: clubStats.wins,
+        losses: clubStats.losses,
+      },
+    ]);
+  };
+
+  const exportScorersCsv = () => {
+    if (!teamStats?.top_scorers?.length) return;
+    downloadCsv("top-scorers.csv", teamStats.top_scorers.map((p) => ({
+      player: p.full_name,
+      ppg: Number(p.ppg).toFixed(1),
+    })));
+  };
+
   return (
     <div>
-      <h1 style={{ marginBottom: 20 }}>Analytics</h1>
+      <div className="page-header">
+        <h1>{t("analytics")}</h1>
+        {clubStats && (
+          <button className="btn-secondary" onClick={exportClubCsv}>
+            {t("export")}
+          </button>
+        )}
+      </div>
 
       <h2 style={{ marginBottom: 12 }}>Club Overview</h2>
       {clubStats ? (
@@ -129,7 +161,12 @@ export default function Analytics() {
 
           {teamStats.top_scorers?.length > 0 ? (
             <div className="page-panel">
-              <h3>Top Scorers</h3>
+              <div className="section-header">
+                <h3>Top Scorers</h3>
+                <button className="btn-secondary btn-sm" onClick={exportScorersCsv}>
+                  {t("export")}
+                </button>
+              </div>
               <table className="page-table">
                 <thead>
                   <tr>

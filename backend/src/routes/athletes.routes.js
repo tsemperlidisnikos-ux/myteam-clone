@@ -5,7 +5,8 @@ import {
   getAthleteProfile,
   updateAthleteProfile,
   deleteAthlete,
-  getAthleteTeams
+  getAthleteTeams,
+  getMyAthleteProfile
 } from "../controllers/athletes.controller.js";
 
 import { authMiddleware } from "../middleware/auth.middleware.js";
@@ -22,6 +23,7 @@ router.use("/:clubId", clubAccessMiddleware);
 
 // GET /athletes/:clubId
 router.get("/:clubId", getAthletes);
+router.get("/:clubId/me", getMyAthleteProfile);
 
 // POST /athletes/:clubId
 router.post("/:clubId", adminOnly, createAthlete);
