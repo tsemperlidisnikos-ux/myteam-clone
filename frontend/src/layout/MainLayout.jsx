@@ -42,13 +42,19 @@ export default function MainLayout({ children }) {
   menu.push(
     { label: t("trainings"), path: "/trainings", icon: <TrainingsIcon /> },
     { label: t("matches"), path: "/matches", icon: <MatchesIcon /> },
-    { label: t("messages"), path: "/messages", icon: <MessagesIcon /> }
+    { label: t("messages"), path: "/messages", icon: <MessagesIcon /> },
+    { label: t("gallery"), path: "/gallery", icon: <MessagesIcon /> }
   );
+
+  if (isParent || isAthlete) {
+    menu.push({ label: t("fees"), path: "/fees", icon: <AnalyticsIcon /> });
+  }
 
   if (!isAthlete && !isParent) {
     menu.push({ label: t("analytics"), path: "/analytics", icon: <AnalyticsIcon /> });
     menu.push({ label: t("medical"), path: "/medical", icon: <AthletesIcon /> });
     menu.push({ label: t("parents"), path: "/parents", icon: <AthletesIcon /> });
+    menu.push({ label: t("fees"), path: "/fees", icon: <AnalyticsIcon /> });
   }
 
   const logout = () => {

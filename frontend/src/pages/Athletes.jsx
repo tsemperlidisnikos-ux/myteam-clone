@@ -24,7 +24,8 @@ export default function Athletes() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [position, setPosition] = useState("");
-  const [editAthlete, setEditAthlete] = useState(null);
+  const [showImport, setShowImport] = useState(false);
+  const [csvText, setCsvText] = useState("");
 
   const loadAthletes = async () => {
     setLoading(true);
@@ -86,6 +87,30 @@ export default function Athletes() {
     }
   };
 
+  const importCsv = async () => {
+    const lines = csvText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const athletes = lines.map((line) => {
+      const [full_name, email, position] = line.split(",").map((s) => s.trim());
+      return { full_name, email, position };
+    });
+    try {
+      const clubId = requireClubId();
+      const res = await api.post(`/athletes/${clubId}/import`, { athletes });
+      showToast(`${t("csvImportSuccess")}: ${res.data.created}`, "success");
+      if (res.data.errors?.length) {
+        showToast(`${res.data.errors.length} σφάλματα`, "info");
+      }
+      setShowImport(false);
+      setCsvText("");
+      loadAthletes();
+    } catch {
+      showToast("Αποτυχία εισαγωγής CSV", "error");
+    }
+  };
+
   const deleteAthlete = async (id) => {
     if (!window.confirm(t("confirmDeleteAthlete"))) return;
     try {
@@ -114,9 +139,14 @@ export default function Athletes() {
       <div className="page-header">
         <h1>{t("athletes")}</h1>
         {isAdmin && (
-          <button className="btn-primary" onClick={() => setShowAdd(true)}>
-            + {t("addAthlete")}
-          </button>
+          <>
+            <button className="btn-secondary" onClick={() => setShowImport(true)} style={{ marginRight: 8 }}>
+              {t("importCsv")}
+            </button>
+            <button className="btn-primary" onClick={() => setShowAdd(true)}>
+              + {t("addAthlete")}
+            </button>
+          </>
         )}
       </div>
 
@@ -240,6 +270,25 @@ export default function Athletes() {
             {t("save")}
           </button>
           <button className="btn-secondary" onClick={() => setShowAdd(false)}>
+            {t("cancel")}
+          </button>
+        </Modal>
+      )}
+
+      {showImport && (
+        <Modal title={t("importCsv")} onClose={() => setShowImport(false)}>
+          <p style={{ fontSize: 14, color: "#6b7280" }}>{t("csvImportHint")}</p>
+          <textarea
+            className="modal-field"
+            rows={8}
+            value={csvText}
+            onChange={(e) => setCsvText(e.target.value)}
+            placeholder={"Γιάννης Παπ., giannis@mail.gr, PG\nΜαρία Κ., maria@mail.gr, C"}
+          />
+          <button className="btn-primary" onClick={importCsv} style={{ marginRight: 10 }}>
+            {t("importCsv")}
+          </button>
+          <button className="btn-secondary" onClick={() => setShowImport(false)}>
             {t("cancel")}
           </button>
         </Modal>

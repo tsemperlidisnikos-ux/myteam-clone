@@ -129,7 +129,8 @@ export const getAthleteProfile = async (req, res) => {
   const result = await pool.query(
     `SELECT u.id, u.full_name, u.email,
             ap.date_of_birth, ap.height_cm, ap.weight_kg, ap.position,
-            ap.medical_notes, ap.parent_name, ap.parent_phone, ap.parent_email,
+            ap.medical_notes, ap.medical_cert_expires, ap.injury_status, ap.injury_since,
+            ap.parent_name, ap.parent_phone, ap.parent_email,
             ap.created_at AS profile_created_at, ap.updated_at AS profile_updated_at
      FROM users u
      LEFT JOIN athlete_profiles ap ON ap.user_id = u.id
@@ -162,6 +163,9 @@ export const updateAthleteProfile = async (req, res) => {
     weight_kg,
     position,
     medical_notes,
+    medical_cert_expires,
+    injury_status,
+    injury_since,
     parent_name,
     parent_phone,
     parent_email
@@ -185,8 +189,9 @@ export const updateAthleteProfile = async (req, res) => {
     result = await pool.query(
       `INSERT INTO athlete_profiles
        (user_id, date_of_birth, height_cm, weight_kg, position,
-        medical_notes, parent_name, parent_phone, parent_email)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        medical_notes, medical_cert_expires, injury_status, injury_since,
+        parent_name, parent_phone, parent_email)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
        RETURNING *`,
       [
         athleteId,
@@ -195,6 +200,9 @@ export const updateAthleteProfile = async (req, res) => {
         weight_kg ?? null,
         position ?? null,
         medical_notes ?? null,
+        medical_cert_expires ?? null,
+        injury_status ?? null,
+        injury_since ?? null,
         parent_name ?? null,
         parent_phone ?? null,
         parent_email ?? null,
@@ -204,9 +212,10 @@ export const updateAthleteProfile = async (req, res) => {
     result = await pool.query(
       `UPDATE athlete_profiles
        SET date_of_birth=$1, height_cm=$2, weight_kg=$3, position=$4,
-           medical_notes=$5, parent_name=$6, parent_phone=$7, parent_email=$8,
+           medical_notes=$5, medical_cert_expires=$6, injury_status=$7, injury_since=$8,
+           parent_name=$9, parent_phone=$10, parent_email=$11,
            updated_at = NOW()
-       WHERE user_id=$9
+       WHERE user_id=$12
        RETURNING *`,
       [
         date_of_birth ?? profile.date_of_birth,
@@ -214,6 +223,9 @@ export const updateAthleteProfile = async (req, res) => {
         weight_kg ?? profile.weight_kg,
         position ?? profile.position,
         medical_notes ?? profile.medical_notes,
+        medical_cert_expires ?? profile.medical_cert_expires,
+        injury_status ?? profile.injury_status,
+        injury_since ?? profile.injury_since,
         parent_name ?? profile.parent_name,
         parent_phone ?? profile.parent_phone,
         parent_email ?? profile.parent_email,
@@ -288,6 +300,7 @@ export const getMedicalOverview = async (req, res) => {
   const { clubId } = req.params;
   const result = await pool.query(
     `SELECT u.id, u.full_name, ap.position, ap.medical_notes,
+            ap.medical_cert_expires, ap.injury_status, ap.injury_since,
             ap.parent_name, ap.parent_phone, ap.parent_email
      FROM club_users cu
      JOIN users u ON u.id = cu.user_id
@@ -297,4 +310,63 @@ export const getMedicalOverview = async (req, res) => {
     [clubId]
   );
   res.json(result.rows);
+};
+
+export const bulkImportAthletes = async (req, res) => {
+  const { clubId } = req.params;
+  const { athletes: rows } = req.body;
+  if (!Array.isArray(rows) || !rows.length) {
+    return res.status(400).json({ error: "athletes array required" });
+  }
+
+  const client = await pool.connect();
+  const created = [];
+  const errors = [];
+
+  try {
+    await client.query("BEGIN");
+    for (const row of rows) {
+      try {
+        if (!row.full_name || !row.email) throw new Error("full_name and email required");
+        const hash = await bcrypt.hash("temp1234", 10);
+        let userId;
+        const existing = await client.query(`SELECT id FROM users WHERE email = $1`, [
+          row.email.toLowerCase(),
+        ]);
+        if (existing.rows[0]) {
+          userId = existing.rows[0].id;
+          await client.query(`UPDATE users SET full_name = $1 WHERE id = $2`, [
+            row.full_name,
+            userId,
+          ]);
+        } else {
+          const u = await client.query(
+            `INSERT INTO users (full_name, email, password_hash) VALUES ($1,$2,$3) RETURNING id`,
+            [row.full_name, row.email.toLowerCase(), hash]
+          );
+          userId = u.rows[0].id;
+        }
+        await client.query(
+          `INSERT INTO club_users (club_id, user_id, role) VALUES ($1,$2,'athlete')
+           ON CONFLICT (club_id, user_id) DO NOTHING`,
+          [clubId, userId]
+        );
+        await client.query(
+          `INSERT INTO athlete_profiles (user_id, position) VALUES ($1,$2)
+           ON CONFLICT (user_id) DO UPDATE SET position = EXCLUDED.position`,
+          [userId, row.position || null]
+        );
+        created.push({ id: userId, full_name: row.full_name, email: row.email });
+      } catch (e) {
+        errors.push({ row, error: e.message });
+      }
+    }
+    await client.query("COMMIT");
+    res.json({ created: created.length, errors });
+  } catch (e) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ error: e.message });
+  } finally {
+    client.release();
+  }
 };

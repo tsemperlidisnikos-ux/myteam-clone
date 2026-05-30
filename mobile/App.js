@@ -42,10 +42,11 @@ const MOBILE_LABELS = {
   absent: "απών",
   late: "αργά",
   coachOnly: "Το mobile app είναι για admin/coach.",
+  readOnly: "Μόνο προβολή",
   offlineSaved: "Αποθηκεύτηκε offline — θα σταλεί αργότερα",
 };
 
-const MOBILE_ROLES = new Set(["admin", "coach"]);
+const STAFF_ROLES = new Set(["admin", "coach"]);
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -120,6 +121,10 @@ export default function App() {
   const [error, setError] = useState("");
   const [offline, setOffline] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [userRole, setUserRole] = useState("");
+  const [readOnlyItem, setReadOnlyItem] = useState(null);
+
+  const canEdit = STAFF_ROLES.has(userRole);
 
   const api = useMemo(
     () =>
@@ -181,8 +186,49 @@ export default function App() {
     return res.data;
   };
 
+  const loadReadOnlyData = async (t, cId, role) => {
+    const headers = authHeaders(t);
+    if (role === "athlete") {
+      const [tr, mt] = await Promise.all([
+        axios.get(`${API}/trainings/${cId}/my`, { headers }),
+        axios.get(`${API}/matches/${cId}/my`, { headers }),
+      ]);
+      setTrainings(tr.data || []);
+      setMatches(mt.data || []);
+      return;
+    }
+    if (role === "parent") {
+      const childrenRes = await axios.get(`${API}/parents/${cId}/children`, { headers });
+      const allTrainings = [];
+      const allMatches = [];
+      for (const child of childrenRes.data || []) {
+        const [tr, mt] = await Promise.all([
+          axios.get(`${API}/parents/${cId}/children/${child.id}/trainings`, { headers }),
+          axios.get(`${API}/parents/${cId}/children/${child.id}/matches`, { headers }),
+        ]);
+        allTrainings.push(...(tr.data || []));
+        allMatches.push(...(mt.data || []));
+      }
+      const uniq = (rows) => {
+        const seen = new Set();
+        return rows.filter((r) => {
+          if (seen.has(r.id)) return false;
+          seen.add(r.id);
+          return true;
+        });
+      };
+      setTrainings(uniq(allTrainings));
+      setMatches(uniq(allMatches));
+    }
+  };
+
   const bootstrapSession = useCallback(
-    async (t, cId) => {
+    async (t, cId, role) => {
+      if (!STAFF_ROLES.has(role)) {
+        setUserRole(role || "");
+        await loadReadOnlyData(t, cId, role);
+        return;
+      }
       const teamsRes = await axios.get(`${API}/teams/${cId}`, {
         headers: authHeaders(t),
       });
@@ -214,15 +260,14 @@ export default function App() {
         const savedClub = await SecureStore.getItemAsync(CLUB_KEY);
         const savedRole = await SecureStore.getItemAsync(ROLE_KEY);
         if (savedToken && savedClub && active) {
-          if (savedRole && !MOBILE_ROLES.has(savedRole)) {
-            await clearSession();
-          } else {
-            setToken(savedToken);
-            setClubId(savedClub);
-            await bootstrapSession(savedToken, savedClub);
+          setUserRole(savedRole || "");
+          setToken(savedToken);
+          setClubId(savedClub);
+          await bootstrapSession(savedToken, savedClub, savedRole);
+          if (STAFF_ROLES.has(savedRole)) {
             await flushQueue(savedToken, savedClub);
-            await registerPushToken(savedToken);
           }
+          await registerPushToken(savedToken);
         }
       } catch {
         // ignore restore errors
@@ -258,18 +303,17 @@ export default function App() {
         setError("No club on this account");
         return;
       }
-      if (!MOBILE_ROLES.has(club.role)) {
-        setError(`${MOBILE_LABELS.coachOnly} Χρησιμοποίησε το web.`);
-        return;
-      }
       setToken(t);
       setClubId(String(club.club_id));
+      setUserRole(club.role || "");
       await SecureStore.setItemAsync(TOKEN_KEY, t);
       await SecureStore.setItemAsync(CLUB_KEY, String(club.club_id));
       await SecureStore.setItemAsync(ROLE_KEY, club.role || "");
 
-      await bootstrapSession(t, club.club_id);
-      await flushQueue(t, club.club_id);
+      await bootstrapSession(t, club.club_id, club.role);
+      if (STAFF_ROLES.has(club.role)) {
+        await flushQueue(t, club.club_id);
+      }
       await registerPushToken(t);
     } catch (err) {
       const msg = err.response?.data?.error || err.message || "Login failed";
@@ -288,6 +332,7 @@ export default function App() {
   const logout = async () => {
     setToken("");
     setClubId("");
+    setUserRole("");
     await clearSession();
   };
 
@@ -351,6 +396,10 @@ export default function App() {
   };
 
   const openTraining = async (training) => {
+    if (!canEdit) {
+      setReadOnlyItem({ type: "training", data: training });
+      return;
+    }
     setSelectedTraining(training);
     setLoading(true);
     try {
@@ -445,6 +494,36 @@ export default function App() {
     );
   }
 
+  if (readOnlyItem) {
+    const item = readOnlyItem.data;
+    return (
+      <SafeAreaView style={styles.container}>
+        <TouchableOpacity onPress={() => setReadOnlyItem(null)}>
+          <Text style={styles.link}>{MOBILE_LABELS.back}</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>
+          {readOnlyItem.type === "training" ? MOBILE_LABELS.trainings : MOBILE_LABELS.matches}
+        </Text>
+        <Text style={styles.hint}>{MOBILE_LABELS.readOnly}</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardDate}>
+            {item.date?.slice?.(0, 10) ?? item.date}
+            {item.start_time ? ` · ${String(item.start_time).slice(0, 5)}` : ""}
+          </Text>
+          {readOnlyItem.type === "match" ? (
+            <Text>
+              vs {item.opponent}
+              {item.our_score != null ? ` · ${item.our_score}–${item.opponent_score}` : ""}
+            </Text>
+          ) : (
+            <Text>{item.location || "—"}</Text>
+          )}
+          {item.notes ? <Text style={styles.hint}>{item.notes}</Text> : null}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (selectedMatch) {
     return (
       <SafeAreaView style={styles.container}>
@@ -526,7 +605,7 @@ export default function App() {
           <Text style={styles.link}>{MOBILE_LABELS.logout}</Text>
         </TouchableOpacity>
       </View>
-      {(offline || pendingCount > 0) && (
+      {(offline || pendingCount > 0) && canEdit && (
         <Text style={styles.hint}>
           {offline ? MOBILE_LABELS.offline : ""}
           {pendingCount > 0 ? ` · ${pendingCount} ${MOBILE_LABELS.pending}` : ""}
@@ -546,7 +625,7 @@ export default function App() {
           <Text>{MOBILE_LABELS.matches}</Text>
         </TouchableOpacity>
       </View>
-      {teams.length > 1 && (
+      {canEdit && teams.length > 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.teamRow}>
           {teams.map((t) => (
             <TouchableOpacity
@@ -559,7 +638,8 @@ export default function App() {
           ))}
         </ScrollView>
       )}
-      {activeTeam ? <Text style={styles.subtitle}>{activeTeam.name}</Text> : null}
+      {canEdit && activeTeam ? <Text style={styles.subtitle}>{activeTeam.name}</Text> : null}
+      {!canEdit ? <Text style={styles.hint}>{MOBILE_LABELS.readOnly}</Text> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {loading ? (
         <ActivityIndicator size="large" />
@@ -571,7 +651,10 @@ export default function App() {
             data={matches}
             keyExtractor={(item) => String(item.id)}
             renderItem={({ item }) => (
-              <TouchableOpacity style={styles.card} onPress={() => openMatch(item)}>
+              <TouchableOpacity
+                style={styles.card}
+                onPress={() => (canEdit ? openMatch(item) : setReadOnlyItem({ type: "match", data: item }))}
+              >
                 <Text style={styles.cardDate}>
                   {item.date?.slice?.(0, 10) ?? item.date} vs {item.opponent}
                 </Text>

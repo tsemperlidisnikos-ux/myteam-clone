@@ -24,7 +24,9 @@ test("send direct message", async ({ page }) => {
   await page.goto("/messages");
 
   await page.getByRole("button", { name: /μηνύματα \(dm\)/i }).click();
-  await page.getByRole("button", { name: /CI Coach/i }).click();
+  const firstContact = page.locator(".dm-contacts button").first();
+  await expect(firstContact).toBeVisible({ timeout: 10000 });
+  await firstContact.click();
   const msg = `E2E DM ${Date.now()}`;
   await page.getByPlaceholder(/γράψε μήνυμα/i).fill(msg);
   await page.getByRole("button", { name: /^αποστολή$/i }).click();

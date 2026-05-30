@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import Stripe from "stripe";
 import { pool } from "./src/db/pool.js";
 import { emailConfigured } from "./src/services/email.service.js";
+import { markAthletePaymentPaid } from "./src/controllers/payments.controller.js";
 
 dotenv.config();
 
@@ -20,6 +21,8 @@ import analyticsRoutes from "./src/routes/analytics.routes.js";
 import billingRoutes from "./src/routes/billing.routes.js";
 import pushRoutes from "./src/routes/push.routes.js";
 import parentRoutes from "./src/routes/parent.routes.js";
+import paymentsRoutes from "./src/routes/payments.routes.js";
+import galleryRoutes from "./src/routes/gallery.routes.js";
 import { authMiddleware } from "./src/middleware/auth.middleware.js";
 import { uploadsDir } from "./src/middleware/upload.middleware.js";
 
@@ -50,12 +53,16 @@ app.post(
       const event = stripe.webhooks.constructEvent(req.body, sig, secret);
       if (event.type === "checkout.session.completed") {
         const session = event.data.object;
-        const clubId = session.metadata?.club_id;
-        if (clubId) {
-          await pool.query(
-            `UPDATE clubs SET subscription_status = 'active', plan_tier = 'pro' WHERE id = $1`,
-            [clubId]
-          );
+        if (session.metadata?.type === "athlete_payment") {
+          await markAthletePaymentPaid(session);
+        } else {
+          const clubId = session.metadata?.club_id;
+          if (clubId) {
+            await pool.query(
+              `UPDATE clubs SET subscription_status = 'active', plan_tier = 'pro' WHERE id = $1`,
+              [clubId]
+            );
+          }
         }
       }
       res.json({ received: true });
@@ -93,6 +100,8 @@ app.use("/auth", authRoutes);
 app.use("/billing", billingRoutes);
 app.use("/push", pushRoutes);
 app.use("/parents", parentRoutes);
+app.use("/payments", paymentsRoutes);
+app.use("/gallery", galleryRoutes);
 app.use("/clubs", authMiddleware, clubsRoutes);
 app.use("/teams", authMiddleware, teamsRoutes);
 app.use("/athletes", authMiddleware, athletesRoutes);

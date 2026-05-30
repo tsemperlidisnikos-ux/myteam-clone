@@ -16,7 +16,63 @@ export const createTraining = async (req, res) => {
   res.json(result.rows[0]);
 };
 
-// GET trainings for a team
+export const createRecurringTrainings = async (req, res) => {
+  const { clubId } = req.params;
+  const {
+    team_id,
+    weekday,
+    weeks = 8,
+    start_date,
+    start_time,
+    end_time,
+    location,
+    notes,
+  } = req.body;
+
+  if (!team_id || weekday == null || !start_date) {
+    return res.status(400).json({ error: "team_id, weekday, start_date required" });
+  }
+
+  const targetDow = Number(weekday);
+  const created = [];
+  let cursor = new Date(`${start_date}T12:00:00`);
+
+  for (let i = 0; i < Number(weeks); i++) {
+    while (cursor.getDay() !== targetDow % 7) {
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    const dateStr = cursor.toISOString().slice(0, 10);
+    const ins = await pool.query(
+      `INSERT INTO trainings (club_id, team_id, coach_id, date, start_time, end_time, location, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+       RETURNING *`,
+      [clubId, team_id, req.user.user_id, dateStr, start_time, end_time, location, notes]
+    );
+    created.push(ins.rows[0]);
+    cursor.setDate(cursor.getDate() + 7);
+  }
+
+  res.json({ count: created.length, trainings: created });
+};
+
+export const updateTraining = async (req, res) => {
+  const { clubId, trainingId } = req.params;
+  const { date, start_time, end_time, location, notes } = req.body;
+
+  const result = await pool.query(
+    `UPDATE trainings SET
+       date = COALESCE($1, date),
+       start_time = COALESCE($2, start_time),
+       end_time = COALESCE($3, end_time),
+       location = COALESCE($4, location),
+       notes = COALESCE($5, notes)
+     WHERE id = $6 AND club_id = $7
+     RETURNING *`,
+    [date || null, start_time || null, end_time || null, location || null, notes ?? null, trainingId, clubId]
+  );
+  if (!result.rows[0]) return res.status(404).json({ error: "Training not found" });
+  res.json(result.rows[0]);
+};
 export const getTrainings = async (req, res) => {
   const { clubId } = req.params;
   const { team_id } = req.query;

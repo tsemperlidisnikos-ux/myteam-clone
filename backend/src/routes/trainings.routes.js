@@ -1,6 +1,8 @@
 import express from "express";
 import {
   createTraining,
+  createRecurringTrainings,
+  updateTraining,
   getTrainings,
   getMyTrainings,
   getTrainingDetails,
@@ -28,6 +30,8 @@ router.get("/:clubId", getTrainings);
 
 // POST /trainings/:clubId
 router.post("/:clubId", createTraining);
+router.post("/:clubId/recurring", createRecurringTrainings);
+router.patch("/:clubId/:trainingId", updateTraining);
 
 // GET /trainings/:clubId/:trainingId
 router.get("/:clubId/:trainingId", getTrainingDetails);

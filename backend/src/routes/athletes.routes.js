@@ -8,6 +8,7 @@ import {
   getAthleteTeams,
   getMyAthleteProfile,
   getMedicalOverview,
+  bulkImportAthletes,
 } from "../controllers/athletes.controller.js";
 
 import { authMiddleware } from "../middleware/auth.middleware.js";
@@ -29,6 +30,7 @@ router.get("/:clubId/medical", staffOnly, getMedicalOverview);
 
 // POST /athletes/:clubId
 router.post("/:clubId", adminOnly, createAthlete);
+router.post("/:clubId/import", adminOnly, bulkImportAthletes);
 
 // GET /athletes/:clubId/:athleteId/teams
 router.get("/:clubId/:athleteId/teams", getAthleteTeams);

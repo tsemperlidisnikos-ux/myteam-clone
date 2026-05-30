@@ -14,6 +14,9 @@ const emptyForm = {
   weight_kg: "",
   position: "",
   medical_notes: "",
+  medical_cert_expires: "",
+  injury_status: "",
+  injury_since: "",
   parent_name: "",
   parent_phone: "",
   parent_email: "",
@@ -56,6 +59,9 @@ export default function AthleteProfile() {
         weight_kg: p.weight_kg ?? "",
         position: p.position || "",
         medical_notes: p.medical_notes || "",
+        medical_cert_expires: p.medical_cert_expires?.slice?.(0, 10) || "",
+        injury_status: p.injury_status || "",
+        injury_since: p.injury_since?.slice?.(0, 10) || "",
         parent_name: p.parent_name || "",
         parent_phone: p.parent_phone || "",
         parent_email: p.parent_email || "",
@@ -83,6 +89,9 @@ export default function AthleteProfile() {
         weight_kg: form.weight_kg ? Number(form.weight_kg) : null,
         position: form.position || null,
         medical_notes: form.medical_notes || null,
+        medical_cert_expires: form.medical_cert_expires || null,
+        injury_status: form.injury_status || null,
+        injury_since: form.injury_since || null,
         parent_name: form.parent_name || null,
         parent_phone: form.parent_phone || null,
         parent_email: form.parent_email || null,
@@ -236,6 +245,9 @@ export default function AthleteProfile() {
           {field(t("heightCm"), "height_cm", "number")}
           {field(t("weightKg"), "weight_kg", "number")}
           {field(t("medicalNotes"), "medical_notes", "textarea")}
+          {field(t("certExpiry"), "medical_cert_expires", "date")}
+          {field(t("injuryStatus"), "injury_status")}
+          {field(t("injurySince"), "injury_since", "date")}
         </div>
 
         <div className="page-panel">

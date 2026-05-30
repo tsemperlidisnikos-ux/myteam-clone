@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId } from "../utils/club";
+import Modal from "../components/Modal";
+import { showToast } from "../utils/toast";
 import { t } from "../i18n/el";
 import useClubRole from "../hooks/useClubRole";
 import { getParentTeamIds } from "../utils/parentData";
@@ -35,7 +37,9 @@ export default function Calendar() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("grid");
-  const { isParent } = useClubRole();
+  const { isParent, isStaff } = useClubRole();
+  const [reschedule, setReschedule] = useState(null);
+  const [resForm, setResForm] = useState({ date: "", start_time: "", end_time: "", location: "" });
 
   const range = useMemo(() => monthRange(offset), [offset]);
 
@@ -85,6 +89,31 @@ export default function Calendar() {
   }, [range, byDate]);
 
   const sortedDays = Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b));
+
+  const openReschedule = (event) => {
+    if (event.event_type !== "training") return;
+    setReschedule(event);
+    setResForm({
+      date: toDayKey(event.date),
+      start_time: String(event.start_time || "").slice(0, 5),
+      end_time: String(event.end_time || "").slice(0, 5),
+      location: event.location || "",
+    });
+  };
+
+  const saveReschedule = async () => {
+    try {
+      const clubId = requireClubId();
+      await api.patch(`/trainings/${clubId}/${reschedule.id}`, resForm);
+      setReschedule(null);
+      const res = await api.get(
+        `/analytics/${clubId}/calendar?from=${range.from}&to=${range.to}`
+      );
+      setEvents(res.data);
+    } catch {
+      showToast("Αποτυχία αναπρογραμματισμού", "error");
+    }
+  };
 
   return (
     <div>
@@ -190,6 +219,18 @@ export default function Calendar() {
                     >
                       {t("open")}
                     </Link>
+                    {isStaff && e.event_type === "training" && (
+                      <>
+                        {" · "}
+                        <button
+                          type="button"
+                          className="page-link-btn"
+                          onClick={() => openReschedule(e)}
+                        >
+                          {t("reschedule")}
+                        </button>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -197,6 +238,41 @@ export default function Calendar() {
           ))
         )}
       </div>
+
+      {reschedule && (
+        <Modal title={t("reschedule")} onClose={() => setReschedule(null)}>
+          <input
+            type="date"
+            className="modal-field"
+            value={resForm.date}
+            onChange={(e) => setResForm({ ...resForm, date: e.target.value })}
+          />
+          <input
+            type="time"
+            className="modal-field"
+            value={resForm.start_time}
+            onChange={(e) => setResForm({ ...resForm, start_time: e.target.value })}
+          />
+          <input
+            type="time"
+            className="modal-field"
+            value={resForm.end_time}
+            onChange={(e) => setResForm({ ...resForm, end_time: e.target.value })}
+          />
+          <input
+            className="modal-field"
+            placeholder={t("location")}
+            value={resForm.location}
+            onChange={(e) => setResForm({ ...resForm, location: e.target.value })}
+          />
+          <button className="btn-primary" onClick={saveReschedule} style={{ marginRight: 10 }}>
+            {t("save")}
+          </button>
+          <button className="btn-secondary" onClick={() => setReschedule(null)}>
+            {t("cancel")}
+          </button>
+        </Modal>
+      )}
     </div>
   );
 }

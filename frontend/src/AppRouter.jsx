@@ -26,6 +26,8 @@ import MatchDetail from "./pages/MatchDetail";
 import Staff from "./pages/Staff";
 import Settings from "./pages/Settings";
 
+import Fees from "./pages/Fees";
+import Gallery from "./pages/Gallery";
 import MainLayout from "./layout/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
@@ -106,6 +108,8 @@ export default function AppRouter() {
           <Route path="/messages" element={withLayout(Messages)} />
           <Route path="/analytics" element={withStaffLayout(Analytics)} />
           <Route path="/medical" element={withStaffLayout(Medical)} />
+          <Route path="/fees" element={withLayout(Fees)} />
+          <Route path="/gallery" element={withLayout(Gallery)} />
           <Route path="/parents" element={withStaffLayout(ParentPortal)} />
         </Routes>
         <ToastContainer />
