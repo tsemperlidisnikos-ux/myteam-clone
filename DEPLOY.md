@@ -13,19 +13,17 @@ stop.bat           REM Stop
 
 ---
 
-## GitHub Push
+## GitHub Push + CI
 
 ```bat
 git remote add origin https://github.com/YOUR_USER/myteam-clone.git
 push-github.bat
 ```
 
-Αν το default branch είναι `main`:
-
-```powershell
-git branch -M main
-git push -u origin main
-```
+GitHub Actions (`.github/workflows/ci.yml`) τρέχει:
+- backend tests + migrate
+- frontend build
+- Playwright E2E (με `npm run seed:ci`)
 
 ---
 
@@ -34,37 +32,45 @@ git push -u origin main
 | Service | Provider | Purpose |
 |---------|----------|---------|
 | Frontend | [Vercel](https://vercel.com) | React SPA |
-| API | [Railway](https://railway.app) or Render | Node.js |
+| API | [Railway](https://railway.app) | Node.js (`backend/railway.toml`) |
 | Database | [Neon](https://neon.tech) | PostgreSQL |
+
+Env templates:
+- `backend/.env.production.example`
+- `frontend/.env.production.example`
 
 ---
 
-## Backend (Railway / Render)
+## Backend (Railway)
 
-1. Connect GitHub repo — root directory: `backend/`
-2. Build command: `npm install`
-3. Start command: `npm run migrate && npm start`
-4. Environment variables:
+1. New project → Deploy from GitHub → **Root directory: `backend/`**
+2. Add PostgreSQL plugin ή σύνδεσε Neon `DATABASE_URL`
+3. Variables (copy από `.env.production.example`):
 
 ```env
-DATABASE_URL=postgres://user:pass@host/db?sslmode=require
-JWT_SECRET=<long-random-string-min-32-chars>
+DATABASE_URL=postgres://...?sslmode=require
+JWT_SECRET=<32+ random chars>
 FRONTEND_URL=https://your-app.vercel.app
 NODE_ENV=production
 PORT=5000
 ```
 
-Optional email (password reset, invites):
+4. Start: `npm run migrate && npm start` (ήδη στο `railway.toml`)
+5. Health: `GET /health` → `{ status, db, services: { email, stripe } }`
+
+### Email (production)
 
 ```env
-SMTP_HOST=smtp.example.com
+SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
-SMTP_USER=...
-SMTP_PASS=...
+SMTP_USER=apikey
+SMTP_PASS=SG.xxxx
 SMTP_FROM=noreply@yourclub.gr
 ```
 
-Optional Stripe:
+Χωρίς SMTP: invites/reset γράφουν στο log (dev mode).
+
+### Stripe (optional Pro)
 
 ```env
 STRIPE_SECRET_KEY=sk_live_...
@@ -72,77 +78,100 @@ STRIPE_PRICE_ID=price_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-5. Health check URL: `/health`
+Webhook URL: `https://your-api.railway.app/billing/webhook`
 
 ---
 
 ## Frontend (Vercel)
 
-1. Import GitHub repo — root: `frontend/`
-2. Framework: Vite
-3. Build: `npm run build`
-4. Output directory: `dist`
-5. Environment variable:
+1. Import repo → **Root: `frontend/`**
+2. Framework: Vite · Build: `npm run build` · Output: `dist`
+3. Env:
 
 ```env
 VITE_API_URL=https://your-api.railway.app
 ```
 
-6. `vercel.json` is included for SPA routing.
+4. `vercel.json` — SPA rewrites included
 
 ---
 
-## Mobile (Expo)
+## Mobile (Expo EAS)
 
-Production API in `mobile/.env`:
+`mobile/.env`:
 
 ```env
 EXPO_PUBLIC_API_URL=https://your-api.railway.app
 ```
 
-Build with EAS:
-
 ```powershell
 cd mobile
-npx eas build --platform android
+eas login && eas init
+npm run build:android
 ```
 
-Local dev: `npm start` (see `mobile/START.md`).
+Δες `mobile/START.md` και `mobile/eas.json`.
 
 ---
 
 ## Docker (self-host)
 
+Production stack (nginx + API + Postgres):
+
 ```powershell
 docker compose up --build -d
 ```
 
-Edit `docker-compose.yml` — set `VITE_API_URL` and `DATABASE_URL` for your domain.
+- Frontend: http://localhost:8080  
+- API: http://localhost:5000  
+
+Dev frontend (hot reload):
+
+```powershell
+docker compose --profile dev up frontend-dev backend db
+```
+
+---
+
+## Parent self-registration
+
+1. Admin/coach ανοίγει προφίλ αθλητή → **Κωδικός γονέα**
+2. Στέλνει link/code στον γονέα
+3. Γονέας: `/register-parent?code=XXXX` ή link από login
 
 ---
 
 ## Post-deploy checklist
 
 - [ ] `npm run migrate` on production DB
-- [ ] `GET /health` returns `{ "status": "ok", "db": "connected" }`
-- [ ] Login works on Vercel URL
-- [ ] CORS: `FRONTEND_URL` matches Vercel domain exactly
-- [ ] Change default / demo passwords
-- [ ] Stripe webhook → `https://your-api/billing/webhook`
-- [ ] Optional: SMTP for real invite/reset emails
+- [ ] `/health` → `db: connected`
+- [ ] Login on Vercel URL
+- [ ] `FRONTEND_URL` = exact Vercel domain (CORS)
+- [ ] SMTP tested (forgot password)
+- [ ] Stripe webhook (if billing)
+- [ ] Change demo passwords
+- [ ] CI green on GitHub
 
 ---
 
-## E2E tests (CI or local)
+## E2E tests
 
 ```powershell
-cd frontend
+cd backend
+npm run migrate
+npm run seed:ci
+
+cd ../frontend
 npm run test:e2e
 ```
 
-Uses test user (override with env):
+CI credentials: `ci@myteam.local` / `ci123456`
+
+Local override:
 
 ```env
-PLAYWRIGHT_EMAIL=admin@example.com
-PLAYWRIGHT_PASSWORD=yourpassword
+PLAYWRIGHT_EMAIL=...
+PLAYWRIGHT_PASSWORD=...
 ```
+
+Tests: login, calendar, messages, **create training**, **send DM**, parent register page.

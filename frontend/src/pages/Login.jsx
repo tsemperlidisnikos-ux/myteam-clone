@@ -53,6 +53,9 @@ export default function Login() {
       <p style={{ marginTop: 16 }}>
         {t("newClub")} <Link to="/register">{t("registerClub")}</Link>
       </p>
+      <p style={{ marginTop: 8 }}>
+        <Link to="/register-parent">{t("parentRegister")}</Link>
+      </p>
     </div>
   );
 }

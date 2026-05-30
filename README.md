@@ -1,94 +1,86 @@
 # MyTeam Clone
 
-Sports club management web app (teams, athletes, trainings, matches, analytics, calendar, messaging).
+Sports club management — teams, athletes, trainings, matches, analytics, calendar, messaging, parent portal, mobile.
 
 ## Stack
 
 - **Backend:** Node.js, Express, PostgreSQL, JWT
-- **Frontend:** React 19, Vite, React Router
-- **Mobile:** Expo (`mobile/`) — login, attendance, match stats
-- **Docker:** `docker-compose.yml`
+- **Frontend:** React 19, Vite
+- **Mobile:** Expo SDK 52 (`mobile/`)
+- **CI:** GitHub Actions + Playwright E2E
+- **Deploy:** Vercel + Railway + Neon (see [DEPLOY.md](DEPLOY.md))
 
-## Quick start
-
-**Windows (εύκολο):**
+## Quick start (Windows)
 
 ```bat
-start.bat
+start.bat          REM backend + frontend
+start.bat all      REM + mobile
+stop.bat
 ```
 
-**Χειροκίνητα:**
+Manual:
 
 ```powershell
-# Backend
-cd backend
-copy .env.example .env
-npm install
-npm run migrate
-npm run seed
-npm run dev
-
-# Frontend
-cd frontend
-npm install
-npm run dev
-
-# Mobile (phone)
-cd mobile
-npm install
-npm start
+cd backend && copy .env.example .env && npm i && npm run migrate && npm run dev
+cd frontend && npm i && npm run dev
 ```
 
-Deploy & GitHub: see [DEPLOY.md](DEPLOY.md) · `push-github.bat`
-
-- Web: http://localhost:5173
-- API: http://localhost:5000
-- Health: http://localhost:5000/health
+- Web: http://localhost:5173  
+- API: http://localhost:5000/health  
 
 ## Features
 
 | Area | Notes |
 |------|--------|
-| **Calendar** | Month grid + list view |
+| **Roles** | Admin, coach, athlete, **parent** |
+| **Parent portal** | `/my-children`, scoped trainings/matches |
+| **Parent self-reg** | Code from athlete profile → `/register-parent` |
+| **Calendar** | Grid + list |
 | **Messages** | Announcements, notifications, DM |
-| **Analytics** | KPIs, trends, CSV export |
-| **Roles** | Admin / coach / athlete UI |
-| **Auth** | Forgot password, reset link (dev logs URL) |
-| **Settings** | Logo upload (admin), dark mode |
-| **Mobile** | Trainings attendance + match PTS |
-| **Billing** | Stripe scaffold (`/billing/:clubId/status`) |
-
-## Roles
-
-| Role | Access |
-|------|--------|
-| **admin** | Full + Staff + logo upload |
-| **coach** | Staff operations, no admin panel |
-| **athlete** | Own profile, view-only stats/scores |
+| **Mobile** | Attendance, match stats, offline queue |
+| **Billing** | Stripe scaffold |
+| **i18n** | Greek UI (`frontend/src/i18n/el.js`) |
+| **PWA** | Service worker |
+| **Dark mode** | Settings toggle |
 
 ## Tests
 
 ```powershell
 cd backend
 npm test
+
+cd ../frontend
+npm run test:e2e
 ```
 
-## Deploy
-
-See [DEPLOY.md](DEPLOY.md) — Vercel + Railway + Neon.
-
-## Mobile on phone
-
-See [mobile/START.md](mobile/START.md) — LAN IP + firewall rules.
-
-## GitHub
+CI seed (for E2E / GitHub Actions):
 
 ```powershell
-git remote add origin https://github.com/YOUR_USER/myteam-clone.git
-git push -u origin main
+cd backend
+npm run seed:ci
 ```
 
-## SaaS (future)
+## Deploy & GitHub
 
-Stripe Checkout + webhooks — scaffold in `backend/src/routes/billing.routes.js`.
+```bat
+git remote add origin https://github.com/YOUR_USER/myteam.git
+push-github.bat
+```
 
+Full guide: [DEPLOY.md](DEPLOY.md)
+
+Production env templates:
+- `backend/.env.production.example`
+- `frontend/.env.production.example`
+
+## Docker
+
+```powershell
+docker compose up --build -d    REM frontend :8080, API :5000
+```
+
+## Mobile
+
+See [mobile/START.md](mobile/START.md) — LAN IP, tunnel, EAS builds.
+
+Test login (dev): `nikos.tseberlidis@gmail.com` / `123456`

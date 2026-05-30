@@ -32,4 +32,16 @@ describe("Auth", () => {
     assert.equal(res.status, 200);
     assert.ok(res.body.message);
   });
+
+  it("POST /auth/register-parent rejects invalid code", async () => {
+    const res = await request(app)
+      .post("/auth/register-parent")
+      .send({
+        code: "INVALID",
+        email: "parent@test.com",
+        password: "test123",
+        full_name: "Test Parent",
+      });
+    assert.equal(res.status, 400);
+  });
 });

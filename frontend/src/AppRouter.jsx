@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
 import RegisterClub from "./pages/RegisterClub";
+import RegisterParent from "./pages/RegisterParent";
 import ChooseClub from "./pages/ChooseClub";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -82,6 +83,7 @@ export default function AppRouter() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<RegisterClub />} />
+          <Route path="/register-parent" element={<RegisterParent />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/accept-invite" element={<AcceptInvite />} />

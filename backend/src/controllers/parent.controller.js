@@ -1,4 +1,5 @@
 import { pool } from "../db/pool.js";
+import crypto from "node:crypto";
 
 async function parentOwnsAthlete(userId, clubId, athleteId) {
   const r = await pool.query(
@@ -135,4 +136,39 @@ export const linkParent = async (req, res) => {
     [user_id, profileId, clubId]
   );
   res.json({ message: "Parent linked" });
+};
+
+function makeParentCode() {
+  return crypto.randomBytes(4).toString("hex").toUpperCase();
+}
+
+export const createParentRegistrationCode = async (req, res) => {
+  const { clubId, athleteId } = req.params;
+
+  const athlete = await pool.query(
+    `SELECT ap.id FROM athlete_profiles ap
+     JOIN club_users cu ON cu.user_id = ap.user_id
+     WHERE (ap.id = $1 OR ap.user_id = $1) AND cu.club_id = $2 AND cu.role = 'athlete'`,
+    [athleteId, clubId]
+  );
+  if (!athlete.rows[0]) {
+    return res.status(404).json({ error: "Athlete not found in club" });
+  }
+
+  const profileId = athlete.rows[0].id;
+  const code = makeParentCode();
+  const expires = new Date(Date.now() + 30 * 86400000);
+
+  await pool.query(
+    `INSERT INTO parent_registration_codes (club_id, athlete_id, code, expires_at, created_by)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [clubId, profileId, code, expires, req.user.user_id]
+  );
+
+  const registerUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/register-parent?code=${code}`;
+  res.json({
+    code,
+    expires_at: expires,
+    register_url: registerUrl,
+  });
 };

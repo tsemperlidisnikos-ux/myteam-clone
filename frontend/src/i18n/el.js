@@ -245,6 +245,15 @@ export const el = {
   targetClub: "Ολόκληρος σύλλογος",
   targetTeam: "Συγκεκριμένη ομάδα",
   selectTeam: "Επίλεξε ομάδα...",
+  parentRegister: "Είσαι γονέας; Εγγραφή με κωδικό",
+  registerParent: "Εγγραφή γονέα",
+  parentCode: "Κωδικός σύνδεσης",
+  parentCodeHint: "Ζήτησε τον κωδικό από τον σύλλογο (από το προφίλ του παιδιού).",
+  generateParentCode: "Κωδικός γονέα",
+  parentCodeGenerated: "Κωδικός δημιουργήθηκε",
+  copyLink: "Αντιγραφή link",
+  registrationSuccess: "Εγγραφή επιτυχής",
+  registrationFailed: "Αποτυχία εγγραφής",
 };
 
 export function t(key) {

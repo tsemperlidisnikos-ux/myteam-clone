@@ -188,3 +188,98 @@ export const resetPassword = async (req, res) => {
 
   res.json({ message: "Password reset successful. You can log in now." });
 };
+
+async function authPayloadForUser(userId) {
+  const userResult = await pool.query(
+    `SELECT id, full_name, email FROM users WHERE id = $1`,
+    [userId]
+  );
+  const user = userResult.rows[0];
+  const clubsResult = await pool.query(
+    `SELECT cu.club_id, cu.role, c.name AS club_name, c.logo_url
+     FROM club_users cu
+     JOIN clubs c ON c.id = cu.club_id
+     WHERE cu.user_id = $1`,
+    [userId]
+  );
+  const token = signToken({ user_id: user.id, email: user.email });
+  return {
+    token,
+    user,
+    clubs: clubsResult.rows,
+  };
+}
+
+export const registerParent = async (req, res) => {
+  const { code, full_name, email, password } = req.body;
+  if (!code || !email || !password) {
+    return res.status(400).json({ error: "code, email and password required" });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters" });
+  }
+
+  const row = await pool.query(
+    `SELECT * FROM parent_registration_codes
+     WHERE UPPER(code) = UPPER($1) AND used_at IS NULL
+       AND (expires_at IS NULL OR expires_at > NOW())`,
+    [String(code).trim()]
+  );
+  const reg = row.rows[0];
+  if (!reg) return res.status(400).json({ error: "Invalid or expired code" });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const normalizedEmail = email.toLowerCase().trim();
+    let userId;
+
+    const existing = await client.query(`SELECT id FROM users WHERE email = $1`, [normalizedEmail]);
+    if (existing.rows[0]) {
+      userId = existing.rows[0].id;
+      const hash = await bcrypt.hash(password, 10);
+      await client.query(
+        `UPDATE users SET password_hash = $1, full_name = COALESCE(NULLIF($2, ''), full_name) WHERE id = $3`,
+        [hash, full_name?.trim(), userId]
+      );
+    } else {
+      const hash = await bcrypt.hash(password, 10);
+      const u = await client.query(
+        `INSERT INTO users (full_name, email, password_hash) VALUES ($1, $2, $3) RETURNING id`,
+        [full_name?.trim() || normalizedEmail.split("@")[0], normalizedEmail, hash]
+      );
+      userId = u.rows[0].id;
+    }
+
+    await client.query(
+      `INSERT INTO club_users (club_id, user_id, role) VALUES ($1, $2, 'parent')
+       ON CONFLICT (club_id, user_id) DO UPDATE SET role = 'parent'`,
+      [reg.club_id, userId]
+    );
+
+    await client.query(
+      `INSERT INTO parent_athletes (user_id, athlete_id, club_id) VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, athlete_id) DO NOTHING`,
+      [userId, reg.athlete_id, reg.club_id]
+    );
+
+    await client.query(
+      `UPDATE parent_registration_codes SET used_at = NOW(), used_by = $1 WHERE id = $2`,
+      [userId, reg.id]
+    );
+
+    await client.query("COMMIT");
+
+    const auth = await authPayloadForUser(userId);
+    res.json({ message: "Parent registered", ...auth });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("registerParent:", err.message);
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "Email already registered" });
+    }
+    res.status(500).json({ error: "Registration failed" });
+  } finally {
+    client.release();
+  }
+};

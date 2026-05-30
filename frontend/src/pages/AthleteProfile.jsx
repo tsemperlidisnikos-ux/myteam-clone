@@ -29,6 +29,8 @@ export default function AthleteProfile() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [parentCodeInfo, setParentCodeInfo] = useState(null);
+  const [generatingCode, setGeneratingCode] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -94,6 +96,30 @@ export default function AthleteProfile() {
     }
   };
 
+  const generateParentCode = async () => {
+    setGeneratingCode(true);
+    try {
+      const clubId = requireClubId();
+      const res = await api.post(`/parents/${clubId}/athletes/${athleteId}/parent-code`);
+      setParentCodeInfo(res.data);
+      showToast(t("parentCodeGenerated"), "success");
+    } catch {
+      showToast("Αποτυχία δημιουργίας κωδικού", "error");
+    } finally {
+      setGeneratingCode(false);
+    }
+  };
+
+  const copyRegisterLink = async () => {
+    if (!parentCodeInfo?.register_url) return;
+    try {
+      await navigator.clipboard.writeText(parentCodeInfo.register_url);
+      showToast(t("copyLink"), "success");
+    } catch {
+      showToast(parentCodeInfo.register_url, "info");
+    }
+  };
+
   if (loading) {
     return <p>{t("loadingProfile")}</p>;
   }
@@ -149,9 +175,21 @@ export default function AthleteProfile() {
       <div className="page-header">
         <h1>{profile.full_name}</h1>
         {!editing && !isParent ? (
-          <button className="btn-primary" onClick={() => setEditing(true)}>
-            {t("editProfile")}
-          </button>
+          <div>
+            {isStaff && (
+              <button
+                className="btn-secondary"
+                onClick={generateParentCode}
+                disabled={generatingCode}
+                style={{ marginRight: 10 }}
+              >
+                {generatingCode ? t("saving") : t("generateParentCode")}
+              </button>
+            )}
+            <button className="btn-primary" onClick={() => setEditing(true)}>
+              {t("editProfile")}
+            </button>
+          </div>
         ) : editing ? (
           <div>
             <button className="btn-primary" onClick={save} disabled={saving} style={{ marginRight: 10 }}>
@@ -169,6 +207,20 @@ export default function AthleteProfile() {
           </div>
         ) : null}
       </div>
+
+      {parentCodeInfo && isStaff && (
+        <div className="page-panel" style={{ marginBottom: 16 }}>
+          <p>
+            <strong>{t("parentCode")}:</strong> {parentCodeInfo.code}
+          </p>
+          <p style={{ fontSize: 14, color: "#6b7280", wordBreak: "break-all" }}>
+            {parentCodeInfo.register_url}
+          </p>
+          <button type="button" className="btn-secondary btn-sm" onClick={copyRegisterLink}>
+            {t("copyLink")}
+          </button>
+        </div>
+      )}
 
       <div className="detail-grid">
         <div className="page-panel">

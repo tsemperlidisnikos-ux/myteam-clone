@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Stripe from "stripe";
 import { pool } from "./src/db/pool.js";
+import { emailConfigured } from "./src/services/email.service.js";
 
 dotenv.config();
 
@@ -74,7 +75,15 @@ app.get("/", (req, res) => {
 app.get("/health", async (req, res) => {
   try {
     await pool.query("SELECT 1");
-    res.json({ status: "ok", db: "connected", uptime: process.uptime() });
+    res.json({
+      status: "ok",
+      db: "connected",
+      uptime: process.uptime(),
+      services: {
+        email: emailConfigured(),
+        stripe: Boolean(process.env.STRIPE_SECRET_KEY),
+      },
+    });
   } catch {
     res.status(503).json({ status: "error", db: "disconnected" });
   }

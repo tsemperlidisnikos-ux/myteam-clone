@@ -5,6 +5,7 @@ import {
   getChildMatches,
   listParentLinks,
   linkParent,
+  createParentRegistrationCode,
 } from "../controllers/parent.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { clubAccessMiddleware } from "../middleware/club.middleware.js";
@@ -19,5 +20,6 @@ router.get("/:clubId/children/:athleteId/trainings", clubAccessMiddleware, getCh
 router.get("/:clubId/children/:athleteId/matches", clubAccessMiddleware, getChildMatches);
 router.get("/:clubId/links", clubAccessMiddleware, staffOnly, listParentLinks);
 router.post("/:clubId/children/:athleteId/link", clubAccessMiddleware, staffOnly, linkParent);
+router.post("/:clubId/athletes/:athleteId/parent-code", clubAccessMiddleware, staffOnly, createParentRegistrationCode);
 
 export default router;
