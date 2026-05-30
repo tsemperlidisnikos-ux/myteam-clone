@@ -2,6 +2,7 @@ import express from "express";
 import {
   createMatch,
   getMatches,
+  getMyMatches,
   getMatchDetails,
   updateMatch,
   setMatchStats,
@@ -22,6 +23,7 @@ router.use(authMiddleware);
 router.use("/:clubId", clubAccessMiddleware);
 
 // GET /matches/:clubId?team_id=...
+router.get("/:clubId/my", getMyMatches);
 router.get("/:clubId", getMatches);
 
 // POST /matches/:clubId

@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import crypto from "node:crypto";
 import { pool } from "../db/pool.js";
 import { signToken } from "../utils/jwt.js";
+import { sendEmail } from "../services/email.service.js";
 
 export const registerClub = async (req, res) => {
   let client;
@@ -148,9 +149,12 @@ export const forgotPassword = async (req, res) => {
 
   const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password?token=${token}`;
 
-  if (process.env.NODE_ENV !== "production") {
-    console.log("[dev] Password reset link:", resetUrl);
-  }
+  await sendEmail({
+    to: email,
+    subject: "MyTeam — επαναφορά κωδικού",
+    text: `Άνοιξε για νέο κωδικό: ${resetUrl}`,
+    html: `<p><a href="${resetUrl}">Επαναφορά κωδικού</a></p>`,
+  });
 
   res.json({
     message: "If that email exists, a reset link was sent.",

@@ -2,6 +2,7 @@ import express from "express";
 import {
   createTraining,
   getTrainings,
+  getMyTrainings,
   getTrainingDetails,
   setAttendance,
   getAttendance,
@@ -22,6 +23,7 @@ router.use(authMiddleware);
 router.use("/:clubId", clubAccessMiddleware);
 
 // GET /trainings/:clubId?team_id=...
+router.get("/:clubId/my", getMyTrainings);
 router.get("/:clubId", getTrainings);
 
 // POST /trainings/:clubId

@@ -25,6 +25,10 @@ export const el = {
   listView: "Λίστα",
   gridView: "Πλέγμα",
   welcome: "Καλώς ήρθες",
+  medical: "Ιατρικά",
+  parents: "Γονείς",
+  billing: "Συνδρομή",
+  invite: "Πρόσκληση",
   quickActions: "Γρήγορες ενέργειες",
 };
 

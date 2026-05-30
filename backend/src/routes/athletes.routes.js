@@ -6,12 +6,13 @@ import {
   updateAthleteProfile,
   deleteAthlete,
   getAthleteTeams,
-  getMyAthleteProfile
+  getMyAthleteProfile,
+  getMedicalOverview,
 } from "../controllers/athletes.controller.js";
 
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { clubAccessMiddleware } from "../middleware/club.middleware.js";
-import { adminOnly } from "../middleware/role.middleware.js";
+import { adminOnly, staffOnly } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.use("/:clubId", clubAccessMiddleware);
 // GET /athletes/:clubId
 router.get("/:clubId", getAthletes);
 router.get("/:clubId/me", getMyAthleteProfile);
+router.get("/:clubId/medical", staffOnly, getMedicalOverview);
 
 // POST /athletes/:clubId
 router.post("/:clubId", adminOnly, createAthlete);

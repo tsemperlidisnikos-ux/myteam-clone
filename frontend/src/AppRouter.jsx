@@ -4,7 +4,9 @@ import Login from "./pages/Login";
 import RegisterClub from "./pages/RegisterClub";
 import ChooseClub from "./pages/ChooseClub";
 import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+import AcceptInvite from "./pages/AcceptInvite";
+import Medical from "./pages/Medical";
+import ParentPortal from "./pages/ParentPortal";
 import Dashboard from "./pages/Dashboard";
 import Teams from "./pages/Teams";
 import Athletes from "./pages/Athletes";
@@ -26,7 +28,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import StaffRoute from "./components/StaffRoute";
 import ToastContainer from "./components/ToastContainer";
-import { ThemeProvider } from "./hooks/useTheme";
+import { ThemeProvider } from "./hooks/useTheme.jsx";
 
 function withLayout(Page) {
   return (
@@ -71,6 +73,7 @@ export default function AppRouter() {
           <Route path="/register" element={<RegisterClub />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/accept-invite" element={<AcceptInvite />} />
           <Route path="/choose-club" element={<ChooseClub />} />
 
           <Route path="/dashboard" element={withLayout(Dashboard)} />
@@ -88,6 +91,8 @@ export default function AppRouter() {
           <Route path="/calendar" element={withLayout(Calendar)} />
           <Route path="/messages" element={withLayout(Messages)} />
           <Route path="/analytics" element={withStaffLayout(Analytics)} />
+          <Route path="/medical" element={withStaffLayout(Medical)} />
+          <Route path="/parents" element={withStaffLayout(ParentPortal)} />
         </Routes>
         <ToastContainer />
       </BrowserRouter>

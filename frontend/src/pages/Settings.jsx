@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
+import { requireClubId } from "../utils/club";
 import useClubRole from "../hooks/useClubRole";
+import { t } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Settings() {
@@ -62,6 +64,27 @@ export default function Settings() {
           </Link>
         )}
       </div>
+
+      {ready && isAdmin && (
+        <div className="page-panel" style={{ maxWidth: 420, marginBottom: 20 }}>
+          <h2>{t("billing")}</h2>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={async () => {
+              try {
+                const clubId = requireClubId();
+                const res = await api.post(`/billing/${clubId}/checkout`);
+                if (res.data.url) window.location.href = res.data.url;
+              } catch (err) {
+                setError(err.response?.data?.error || "Billing failed");
+              }
+            }}
+          >
+            Upgrade to Pro
+          </button>
+        </div>
+      )}
 
       {ready && isAdmin && (
         <div className="page-panel" style={{ maxWidth: 420, marginBottom: 20 }}>

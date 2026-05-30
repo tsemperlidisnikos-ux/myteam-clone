@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import useTeams from "../hooks/useTeams";
+import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
 export default function Trainings() {
   const { teams, loading: teamsLoading } = useTeams();
+  const { isAthlete, isStaff } = useClubRole();
   const [teamId, setTeamId] = useState("");
   const [trainings, setTrainings] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
@@ -21,12 +23,17 @@ export default function Trainings() {
   });
 
   const loadTrainings = async (selectedTeamId) => {
-    if (!selectedTeamId) {
-      setTrainings([]);
-      return;
-    }
     try {
       const clubId = requireClubId();
+      if (isAthlete) {
+        const res = await api.get(`/trainings/${clubId}/my`);
+        setTrainings(res.data);
+        return;
+      }
+      if (!selectedTeamId) {
+        setTrainings([]);
+        return;
+      }
       const res = await api.get(`/trainings/${clubId}?team_id=${selectedTeamId}`);
       setTrainings(res.data);
     } catch {
@@ -35,14 +42,18 @@ export default function Trainings() {
   };
 
   useEffect(() => {
+    if (isAthlete) {
+      loadTrainings();
+      return;
+    }
     if (teams.length > 0 && !teamId) {
       setTeamId(String(teams[0].id));
     }
-  }, [teams, teamId]);
+  }, [teams, teamId, isAthlete]);
 
   useEffect(() => {
-    if (teamId) loadTrainings(teamId);
-  }, [teamId]);
+    if (!isAthlete && teamId) loadTrainings(teamId);
+  }, [teamId, isAthlete]);
 
   const createTraining = async () => {
     try {
@@ -63,11 +74,14 @@ export default function Trainings() {
     <div>
       <div className="page-header">
         <h1>Trainings</h1>
-        <button className="btn-primary" onClick={() => setShowAdd(true)} disabled={!teamId}>
-          + New Training
-        </button>
+        {isStaff && (
+          <button className="btn-primary" onClick={() => setShowAdd(true)} disabled={!teamId}>
+            + New Training
+          </button>
+        )}
       </div>
 
+      {!isAthlete && (
       <div className="page-toolbar">
         <select
           className="page-select"
@@ -86,6 +100,7 @@ export default function Trainings() {
           )}
         </select>
       </div>
+      )}
 
       <div className="page-panel">
         {trainings.length === 0 ? (

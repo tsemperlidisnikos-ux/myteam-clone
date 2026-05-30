@@ -1,0 +1,91 @@
+import crypto from "node:crypto";
+import bcrypt from "bcrypt";
+import { pool } from "../db/pool.js";
+import { sendEmail } from "../services/email.service.js";
+
+export const createInvite = async (req, res) => {
+  const { clubId } = req.params;
+  const { email, role = "athlete", full_name } = req.body;
+  if (!email) return res.status(400).json({ error: "Email required" });
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + 7 * 86400000);
+
+  await pool.query(
+    `INSERT INTO club_invites (club_id, email, role, token, invited_by, expires_at)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [clubId, email.toLowerCase(), role, token, req.user.user_id, expires]
+  );
+
+  const inviteUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/accept-invite?token=${token}`;
+  await sendEmail({
+    to: email,
+    subject: "MyTeam — πρόσκληση συλλόγου",
+    text: `Προσκλήθηκες στον σύλλογο. Άνοιξε: ${inviteUrl}`,
+    html: `<p>Προσκλήθηκες στον σύλλογο.</p><p><a href="${inviteUrl}">Αποδοχή πρόσκλησης</a></p>`,
+  });
+
+  res.json({
+    message: "Invite sent",
+    ...(process.env.NODE_ENV !== "production" ? { invite_url: inviteUrl, token } : {}),
+  });
+};
+
+export const acceptInvite = async (req, res) => {
+  const { token, password, full_name } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ error: "Token and password required" });
+  }
+
+  const row = await pool.query(
+    `SELECT * FROM club_invites WHERE token = $1 AND accepted_at IS NULL AND expires_at > NOW()`,
+    [token]
+  );
+  const invite = row.rows[0];
+  if (!invite) return res.status(400).json({ error: "Invalid or expired invite" });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    let userId;
+    const existing = await client.query(`SELECT id FROM users WHERE email = $1`, [invite.email]);
+    if (existing.rows[0]) {
+      userId = existing.rows[0].id;
+      if (password) {
+        const hash = await bcrypt.hash(password, 10);
+        await client.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [hash, userId]);
+      }
+    } else {
+      const hash = await bcrypt.hash(password, 10);
+      const u = await client.query(
+        `INSERT INTO users (full_name, email, password_hash) VALUES ($1, $2, $3) RETURNING id`,
+        [full_name || invite.email.split("@")[0], invite.email, hash]
+      );
+      userId = u.rows[0].id;
+    }
+
+    await client.query(
+      `INSERT INTO club_users (club_id, user_id, role) VALUES ($1, $2, $3)
+       ON CONFLICT (club_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
+      [invite.club_id, userId, invite.role]
+    );
+    await client.query(`UPDATE club_invites SET accepted_at = NOW() WHERE id = $1`, [invite.id]);
+    await client.query("COMMIT");
+    res.json({ message: "Invite accepted. You can log in now.", club_id: invite.club_id });
+  } catch (e) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ error: "Failed to accept invite" });
+  } finally {
+    client.release();
+  }
+};
+
+export const listInvites = async (req, res) => {
+  const { clubId } = req.params;
+  const result = await pool.query(
+    `SELECT id, email, role, expires_at, accepted_at, created_at
+     FROM club_invites WHERE club_id = $1 ORDER BY created_at DESC LIMIT 50`,
+    [clubId]
+  );
+  res.json(result.rows);
+};

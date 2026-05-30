@@ -251,3 +251,18 @@ export const deleteAthlete = async (req, res) => {
 
   res.json({ message: "Athlete deleted" });
 };
+
+export const getMedicalOverview = async (req, res) => {
+  const { clubId } = req.params;
+  const result = await pool.query(
+    `SELECT u.id, u.full_name, ap.position, ap.medical_notes,
+            ap.parent_name, ap.parent_phone, ap.parent_email
+     FROM club_users cu
+     JOIN users u ON u.id = cu.user_id
+     LEFT JOIN athlete_profiles ap ON ap.user_id = u.id
+     WHERE cu.club_id = $1 AND cu.role = 'athlete'
+     ORDER BY u.full_name`,
+    [clubId]
+  );
+  res.json(result.rows);
+};

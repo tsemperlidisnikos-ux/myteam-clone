@@ -8,6 +8,7 @@ import {
   changeUserRole,
   uploadClubLogo,
 } from "../controllers/clubs.controller.js";
+import { createInvite, listInvites } from "../controllers/invites.controller.js";
 
 import { uploadLogo } from "../middleware/upload.middleware.js";
 
@@ -23,6 +24,8 @@ router.use("/:clubId", clubAccessMiddleware);
 router.get("/:clubId", getClub);
 router.put("/:clubId", adminOnly, updateClub);
 router.post("/:clubId/logo", adminOnly, uploadLogo.single("logo"), uploadClubLogo);
+router.post("/:clubId/invites", adminOnly, createInvite);
+router.get("/:clubId/invites", adminOnly, listInvites);
 router.get("/:clubId/users", getClubUsers);
 router.post("/:clubId/staff", adminOnly, createStaffUser);
 router.post("/:clubId/users", adminOnly, addUserToClub);

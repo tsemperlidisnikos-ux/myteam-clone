@@ -45,6 +45,8 @@ export default function MainLayout({ children }) {
 
   if (!isAthlete) {
     menu.push({ label: t("analytics"), path: "/analytics", icon: <AnalyticsIcon /> });
+    menu.push({ label: t("medical"), path: "/medical", icon: <AthletesIcon /> });
+    menu.push({ label: t("parents"), path: "/parents", icon: <AthletesIcon /> });
   }
 
   const logout = () => {

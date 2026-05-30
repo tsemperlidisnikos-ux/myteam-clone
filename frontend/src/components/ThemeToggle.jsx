@@ -1,4 +1,4 @@
-import { useTheme } from "../hooks/useTheme";
+import { useTheme } from "../hooks/useTheme.jsx";
 import { t } from "../i18n/el";
 
 export default function ThemeToggle() {

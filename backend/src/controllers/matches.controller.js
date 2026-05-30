@@ -32,6 +32,22 @@ export const getMatches = async (req, res) => {
   res.json(result.rows);
 };
 
+export const getMyMatches = async (req, res) => {
+  const { clubId } = req.params;
+  const userId = req.user.user_id;
+
+  const result = await pool.query(
+    `SELECT m.*, tm.name AS team_name
+     FROM matches m
+     JOIN team_athletes ta ON ta.team_id = m.team_id AND ta.user_id = $2
+     JOIN teams tm ON tm.id = m.team_id
+     WHERE m.club_id = $1
+     ORDER BY m.date DESC`,
+    [clubId, userId]
+  );
+  res.json(result.rows);
+};
+
 // GET match details
 export const getMatchDetails = async (req, res) => {
   const { matchId } = req.params;

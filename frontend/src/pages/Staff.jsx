@@ -4,6 +4,7 @@ import { requireClubId } from "../utils/club";
 import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
+import { t } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Staff() {
@@ -17,6 +18,8 @@ export default function Staff() {
     password: "",
     role: "coach",
   });
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("athlete");
 
   const load = async () => {
     setLoading(true);
@@ -34,6 +37,20 @@ export default function Staff() {
   useEffect(() => {
     load();
   }, []);
+
+  const sendInvite = async () => {
+    try {
+      const clubId = requireClubId();
+      const res = await api.post(`/clubs/${clubId}/invites`, {
+        email: inviteEmail,
+        role: inviteRole,
+      });
+      showToast(res.data.message || "Invite sent", "success");
+      setInviteEmail("");
+    } catch (err) {
+      showToast(err.response?.data?.error || "Invite failed", "error");
+    }
+  };
 
   const createStaff = async () => {
     try {
@@ -96,6 +113,27 @@ export default function Staff() {
             </tbody>
           </table>
         )}
+      </div>
+
+      <div className="page-panel" style={{ maxWidth: 420, marginBottom: 20 }}>
+        <h2>{t("invite")} (email)</h2>
+        <input
+          className="modal-field"
+          placeholder="email@example.com"
+          value={inviteEmail}
+          onChange={(e) => setInviteEmail(e.target.value)}
+        />
+        <select
+          className="modal-field"
+          value={inviteRole}
+          onChange={(e) => setInviteRole(e.target.value)}
+        >
+          <option value="athlete">athlete</option>
+          <option value="coach">coach</option>
+        </select>
+        <button className="btn-primary" onClick={sendInvite}>
+          Αποστολή πρόσκλησης
+        </button>
       </div>
 
       {showAdd && (

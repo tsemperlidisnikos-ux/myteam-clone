@@ -33,6 +33,23 @@ export const getTrainings = async (req, res) => {
   res.json(result.rows);
 };
 
+export const getMyTrainings = async (req, res) => {
+  const { clubId } = req.params;
+  const userId = req.user.user_id;
+
+  const result = await pool.query(
+    `SELECT t.*, u.full_name AS coach_name, tm.name AS team_name
+     FROM trainings t
+     JOIN team_athletes ta ON ta.team_id = t.team_id AND ta.user_id = $2
+     JOIN teams tm ON tm.id = t.team_id
+     JOIN users u ON u.id = t.coach_id
+     WHERE t.club_id = $1
+     ORDER BY t.date DESC`,
+    [clubId, userId]
+  );
+  res.json(result.rows);
+};
+
 // GET training details
 export const getTrainingDetails = async (req, res) => {
   const { trainingId } = req.params;
