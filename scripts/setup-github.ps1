@@ -40,8 +40,15 @@ if (-not $authOk) {
 
 $visibility = if ($Public) { "--public" } else { "--private" }
 
-git remote get-url origin 2>$null | Out-Null
-if ($LASTEXITCODE -eq 0) {
+$hasOrigin = $false
+try {
+  $null = git remote get-url origin 2>$null
+  if ($LASTEXITCODE -eq 0) { $hasOrigin = $true }
+} catch {
+  $hasOrigin = $false
+}
+
+if ($hasOrigin) {
   Write-Host "Remote origin exists - pushing..."
   git push -u origin master 2>$null
   if ($LASTEXITCODE -ne 0) {
