@@ -99,7 +99,7 @@ export default function Calendar() {
             →
           </button>
           <button className="btn-secondary" onClick={() => setOffset(0)}>
-            Σήμερα
+            {t("today")}
           </button>
           <button
             className={view === "grid" ? "btn-primary" : "btn-secondary"}
@@ -152,7 +152,7 @@ export default function Calendar() {
             </div>
           </>
         ) : sortedDays.length === 0 ? (
-          <p>Δεν υπάρχουν προπονήσεις ή αγώνες αυτόν τον μήνα.</p>
+          <p>{t("noEventsMonth")}</p>
         ) : (
           sortedDays.map(([day, items]) => (
             <div key={day} className="calendar-day">
@@ -167,7 +167,7 @@ export default function Calendar() {
                 {items.map((e) => (
                   <li key={`${e.event_type}-${e.id}`} className={`cal-event cal-${e.event_type}`}>
                     <span className="cal-type">
-                      {e.event_type === "training" ? "🏀 Προπόνηση" : "🏆 Αγώνας"}
+                      {e.event_type === "training" ? `🏀 ${t("trainingEvent")}` : `🏆 ${t("matchEvent")}`}
                     </span>
                     <strong>{e.team_name}</strong>
                     {e.event_type === "match" && e.opponent && ` vs ${e.opponent}`}
@@ -188,7 +188,7 @@ export default function Calendar() {
                       }
                       className="page-link"
                     >
-                      Άνοιγμα
+                      {t("open")}
                     </Link>
                   </li>
                 ))}

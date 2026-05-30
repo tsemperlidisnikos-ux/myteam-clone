@@ -8,6 +8,7 @@
     "dev": "nodemon app.js",
     "migrate": "node src/db/migrate.js",
     "seed": "node scripts/seed-demo.js",
+    "seed:ci": "node scripts/seed-ci.js",
     "test": "node --test test/**/*.test.js"
   },
   "dependencies": {

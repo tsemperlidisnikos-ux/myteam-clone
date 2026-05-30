@@ -68,3 +68,23 @@ Project: **Expo SDK 52** — χρειάζεσαι **τελευταία Expo Go**
 
 - Email: `nikos.tseberlidis@gmail.com`
 - Password: `123456`
+
+---
+
+## Production build (EAS)
+
+1. Εγκατάσταση EAS CLI: `npm i -g eas-cli`
+2. Login: `eas login`
+3. Στο `mobile/`: `eas init` (δημιουργεί project ID στο Expo)
+4. Αντίγραψε `.env.example` → `.env` με production API URL (HTTPS)
+5. Preview APK (Android):
+
+```powershell
+cd C:\MTclone\mobile
+npm run build:android
+```
+
+6. Για push notifications σε production χρειάζονται FCM (Android) / APNs (iOS) credentials στο Expo dashboard.
+
+Δες `eas.json` για profiles: `development`, `preview`, `production`.
+

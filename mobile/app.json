@@ -5,17 +5,20 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "platforms": ["ios", "android"],
     "splash": {
       "backgroundColor": "#111827"
     },
-    "plugins": [
-      "expo-asset",
-      "expo-font",
-      "expo-notifications"
-    ]
+    "ios": {
+      "bundleIdentifier": "com.myteam.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.myteam.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#111827"
+      }
+    },
+    "plugins": ["expo-asset", "expo-font", "expo-notifications"]
   }
 }

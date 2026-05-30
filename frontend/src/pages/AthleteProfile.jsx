@@ -41,7 +41,7 @@ export default function AthleteProfile() {
       ]);
       const p = pRes.data;
       if (!p?.id) {
-        setError("Athlete not found");
+        setError(t("athleteNotFound"));
         setProfile(null);
         return;
       }
@@ -59,7 +59,7 @@ export default function AthleteProfile() {
         parent_email: p.parent_email || "",
       });
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to load athlete profile");
+      setError(err.response?.data?.error || t("failedLoadProfile"));
       setProfile(null);
     } finally {
       setLoading(false);
@@ -95,19 +95,19 @@ export default function AthleteProfile() {
   };
 
   if (loading) {
-    return <p>Loading profile...</p>;
+    return <p>{t("loadingProfile")}</p>;
   }
 
   if (error || !profile) {
     return (
       <div>
         <Link to="/athletes" className="page-back">
-          ← Back to Athletes
+          {t("backToAthletes")}
         </Link>
         <div className="page-panel" style={{ marginTop: 16 }}>
-          <p className="form-error">{error || "Athlete not found"}</p>
+          <p className="form-error">{error || t("athleteNotFound")}</p>
           <Link to="/athletes" className="btn-primary" style={{ display: "inline-block", marginTop: 12 }}>
-            Back to Athletes list
+            {t("backToAthletesList")}
           </Link>
         </div>
       </div>
@@ -143,19 +143,19 @@ export default function AthleteProfile() {
   return (
     <div>
       <Link to={isStaff ? "/athletes" : "/dashboard"} className="page-back">
-        ← {isStaff ? "Back to Athletes" : t("dashboard")}
+        ← {isStaff ? t("athletes") : t("dashboard")}
       </Link>
 
       <div className="page-header">
         <h1>{profile.full_name}</h1>
         {!editing && !isParent ? (
           <button className="btn-primary" onClick={() => setEditing(true)}>
-            Edit Profile
+            {t("editProfile")}
           </button>
         ) : editing ? (
           <div>
             <button className="btn-primary" onClick={save} disabled={saving} style={{ marginRight: 10 }}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("saving") : t("save")}
             </button>
             <button
               className="btn-secondary"
@@ -164,7 +164,7 @@ export default function AthleteProfile() {
                 load();
               }}
             >
-              Cancel
+              {t("cancel")}
             </button>
           </div>
         ) : null}
@@ -172,37 +172,37 @@ export default function AthleteProfile() {
 
       <div className="detail-grid">
         <div className="page-panel">
-          <h2>Personal</h2>
-          {field("Full name", "full_name")}
+          <h2>{t("personal")}</h2>
+          {field(t("fullName"), "full_name")}
           {!editing && (
             <p>
-              <strong>Email:</strong> {profile.email}
+              <strong>{t("email")}:</strong> {profile.email}
             </p>
           )}
-          {field("Date of birth", "date_of_birth", "date")}
-          {field("Position", "position")}
-          {field("Height (cm)", "height_cm", "number")}
-          {field("Weight (kg)", "weight_kg", "number")}
-          {field("Medical notes", "medical_notes", "textarea")}
+          {field(t("dateOfBirth"), "date_of_birth", "date")}
+          {field(t("position"), "position")}
+          {field(t("heightCm"), "height_cm", "number")}
+          {field(t("weightKg"), "weight_kg", "number")}
+          {field(t("medicalNotes"), "medical_notes", "textarea")}
         </div>
 
         <div className="page-panel">
-          <h2>Parent / Guardian</h2>
-          {field("Name", "parent_name")}
-          {field("Phone", "parent_phone", "tel")}
-          {field("Email", "parent_email", "email")}
+          <h2>{t("parentGuardian")}</h2>
+          {field(t("name"), "parent_name")}
+          {field(t("phone"), "parent_phone", "tel")}
+          {field(t("email"), "parent_email", "email")}
 
-          <h2 style={{ marginTop: 24 }}>Teams</h2>
+          <h2 style={{ marginTop: 24 }}>{t("teams")}</h2>
           {teams.length === 0 ? (
-            <p>Not assigned to any team.</p>
+            <p>{t("notOnTeam")}</p>
           ) : (
             <ul className="team-list">
-              {teams.map((t) => (
-                <li key={t.id}>
-                  <Link to={`/teams/${t.id}`} className="page-link">
-                    {t.name}
+              {teams.map((team) => (
+                <li key={team.id}>
+                  <Link to={`/teams/${team.id}`} className="page-link">
+                    {team.name}
                   </Link>
-                  {t.category && <span className="team-cat"> ({t.category})</span>}
+                  {team.category && <span className="team-cat"> ({team.category})</span>}
                 </li>
               ))}
             </ul>

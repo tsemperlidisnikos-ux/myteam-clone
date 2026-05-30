@@ -64,13 +64,13 @@ export default function Dashboard() {
           {!isAthlete && (
             <div className="stat-grid">
               <Card label={t("athletes")} value={stats.athletes} />
-              <Card label="Coaches" value={stats.coaches} />
+              <Card label={t("coaches")} value={stats.coaches} />
               <Card label={t("teams")} value={stats.teams} />
               <Card label={t("trainings")} value={stats.trainings} />
-              <Card label="Upcoming" value={stats.upcoming_trainings} suffix=" sessions" />
+              <Card label={t("upcoming")} value={stats.upcoming_trainings} suffix={t("sessions")} />
               <Card label={t("matches")} value={stats.matches} />
-              <Card label="Attendance" value={stats.attendance_rate ?? 0} suffix="%" />
-              <Card label="Record" value={record} />
+              <Card label={t("attendance")} value={stats.attendance_rate ?? 0} suffix="%" />
+              <Card label={t("record")} value={record} />
             </div>
           )}
 
@@ -90,7 +90,7 @@ export default function Dashboard() {
                     {e.opponent ? ` vs ${e.opponent}` : ""}
                     {" · "}
                     <Link to={eventLink(e)} className="page-link">
-                      Άνοιγμα
+                      {t("open")}
                     </Link>
                   </li>
                 ))}
@@ -104,32 +104,32 @@ export default function Dashboard() {
               <>
                 <Link to="/teams" className="quick-action-card">
                   <strong>{t("teams")}</strong>
-                  <span>Rosters & coaches</span>
+                  <span>{t("quickTeamsDesc")}</span>
                 </Link>
                 <Link to="/athletes" className="quick-action-card">
                   <strong>{t("athletes")}</strong>
-                  <span>Profiles</span>
+                  <span>{t("quickAthletesDesc")}</span>
                 </Link>
               </>
             )}
             {isAthlete && (
               <Link to="/my-profile" className="quick-action-card">
                 <strong>{t("myProfile")}</strong>
-                <span>View & edit</span>
+                <span>{t("quickProfileDesc")}</span>
               </Link>
             )}
             <Link to="/trainings" className="quick-action-card">
               <strong>{t("trainings")}</strong>
-              <span>Schedule & attendance</span>
+              <span>{t("quickTrainingsDesc")}</span>
             </Link>
             <Link to="/matches" className="quick-action-card">
               <strong>{t("matches")}</strong>
-              <span>Fixtures & scores</span>
+              <span>{t("quickMatchesDesc")}</span>
             </Link>
             {!isAthlete && (
               <Link to="/analytics" className="quick-action-card">
                 <strong>{t("analytics")}</strong>
-                <span>Club stats</span>
+                <span>{t("quickAnalyticsDesc")}</span>
               </Link>
             )}
             <Link to="/calendar" className="quick-action-card">
@@ -139,19 +139,19 @@ export default function Dashboard() {
             {ready && isAdmin && (
               <Link to="/staff" className="quick-action-card">
                 <strong>{t("staff")}</strong>
-                <span>Add coaches</span>
+                <span>{t("quickStaffDesc")}</span>
               </Link>
             )}
             {ready && isStaff && (
               <Link to="/messages" className="quick-action-card">
                 <strong>{t("messages")}</strong>
-                <span>Announcements & DM</span>
+                <span>{t("quickMessagesDesc")}</span>
               </Link>
             )}
           </div>
         </>
       ) : (
-        <p>Could not load stats. Check that the backend is running.</p>
+        <p>{t("couldNotLoadStats")}</p>
       )}
     </div>
   );

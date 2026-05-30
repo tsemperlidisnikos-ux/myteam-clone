@@ -5,7 +5,7 @@ import useTeams from "../hooks/useTeams";
 import useClubRole from "../hooks/useClubRole";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
-import { t } from "../i18n/el";
+import { t, roleLabel } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Messages() {
@@ -144,12 +144,12 @@ export default function Messages() {
         <h1>{t("messages")}</h1>
         {tab === "announcements" && isStaff && (
           <button className="btn-primary" onClick={() => setShowAdd(true)}>
-            + Νέα Ανακοίνωση
+            + {t("newAnnouncement")}
           </button>
         )}
         {tab === "notifications" && unreadCount > 0 && (
           <button className="btn-secondary" onClick={markAllRead}>
-            Ολα διαβασμένα ({unreadCount})
+            {t("markAllRead")} ({unreadCount})
           </button>
         )}
       </div>
@@ -159,26 +159,26 @@ export default function Messages() {
           className={tab === "announcements" ? "btn-primary" : "btn-secondary"}
           onClick={() => setTab("announcements")}
         >
-          Ανακοινώσεις
+          {t("announcementsTab")}
         </button>
         <button
           className={tab === "notifications" ? "btn-primary" : "btn-secondary"}
           onClick={() => setTab("notifications")}
         >
-          Ειδοποιήσεις {unreadCount > 0 ? `(${unreadCount})` : ""}
+          {t("notificationsTab")} {unreadCount > 0 ? `(${unreadCount})` : ""}
         </button>
         <button
           className={tab === "dm" ? "btn-primary" : "btn-secondary"}
           onClick={() => setTab("dm")}
         >
-          Μηνύματα (DM)
+          {t("dmTab")}
         </button>
       </div>
 
       <div className="page-panel">
         {tab === "announcements" && (
           announcements.length === 0 ? (
-            <p>Δεν υπάρχουν ανακοινώσεις.</p>
+            <p>{t("noAnnouncements")}</p>
           ) : (
             announcements.map((a) => (
               <div key={a.id} className="announcement-item">
@@ -195,14 +195,14 @@ export default function Messages() {
 
         {tab === "notifications" && (
           notifications.length === 0 ? (
-            <p>Δεν υπάρχουν ειδοποιήσεις.</p>
+            <p>{t("noNotifications")}</p>
           ) : (
             <table className="page-table">
               <thead>
                 <tr>
-                  <th>Τίτλος</th>
-                  <th>Μήνυμα</th>
-                  <th>Ημερομηνία</th>
+                  <th>{t("titleCol")}</th>
+                  <th>{t("messageCol")}</th>
+                  <th>{t("date")}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -215,7 +215,7 @@ export default function Messages() {
                     <td>
                       {!n.is_read && (
                         <button className="btn-blue" onClick={() => markRead(n.id)}>
-                          Διαβάστηκε
+                          {t("markRead")}
                         </button>
                       )}
                     </td>
@@ -229,11 +229,11 @@ export default function Messages() {
         {tab === "dm" && (
           <div className="dm-layout">
             <div className="dm-contacts">
-              <h3>Επαφές</h3>
+              <h3>{t("contacts")}</h3>
               {contactsLoading ? (
                 <p>{t("loading")}</p>
               ) : contacts.length === 0 ? (
-                <p>Δεν βρέθηκαν επαφές.</p>
+                <p>{t("noContacts")}</p>
               ) : (
                 contacts.map((c) => (
                   <button
@@ -245,14 +245,14 @@ export default function Messages() {
                     onClick={() => setActiveContact(c)}
                   >
                     {c.full_name}
-                    <span className="dm-role">{c.role}</span>
+                    <span className="dm-role">{roleLabel(c.role)}</span>
                   </button>
                 ))
               )}
             </div>
             <div className="dm-chat">
               {!activeContact ? (
-                <p>Επίλεξε επαφή για συνομιλία.</p>
+                <p>{t("selectContact")}</p>
               ) : (
                 <>
                   <h3>{activeContact.full_name}</h3>
@@ -272,13 +272,13 @@ export default function Messages() {
                   <div className="dm-compose">
                     <input
                       className="page-input"
-                      placeholder="Γράψε μήνυμα..."
+                      placeholder={t("writeMessage")}
                       value={dmText}
                       onChange={(e) => setDmText(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && sendDm()}
                     />
                     <button className="btn-primary" onClick={sendDm}>
-                      Αποστολή
+                      {t("send")}
                     </button>
                   </div>
                 </>
@@ -289,15 +289,15 @@ export default function Messages() {
       </div>
 
       {showAdd && (
-        <Modal title="Νέα Ανακοίνωση" onClose={() => setShowAdd(false)}>
+        <Modal title={t("newAnnouncement")} onClose={() => setShowAdd(false)}>
           <input
-            placeholder="Τίτλος"
+            placeholder={t("titleCol")}
             className="modal-field"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
           <textarea
-            placeholder="Μήνυμα"
+            placeholder={t("messageCol")}
             className="modal-field"
             rows={4}
             value={form.message}
@@ -308,8 +308,8 @@ export default function Messages() {
             value={form.target_type}
             onChange={(e) => setForm({ ...form, target_type: e.target.value, target_id: "" })}
           >
-            <option value="club">Ολόκληρος σύλλογος</option>
-            <option value="team">Συγκεκριμένη ομάδα</option>
+            <option value="club">{t("targetClub")}</option>
+            <option value="team">{t("targetTeam")}</option>
           </select>
           {form.target_type === "team" && (
             <select
@@ -317,7 +317,7 @@ export default function Messages() {
               value={form.target_id}
               onChange={(e) => setForm({ ...form, target_id: e.target.value })}
             >
-              <option value="">Επίλεξε ομάδα...</option>
+              <option value="">{t("selectTeam")}</option>
               {teams.map((tm) => (
                 <option key={tm.id} value={tm.id}>
                   {tm.name}
@@ -326,7 +326,7 @@ export default function Messages() {
             </select>
           )}
           <button className="btn-primary" onClick={createAnnouncement} style={{ marginRight: 10 }}>
-            Δημοσίευση
+            {t("publish")}
           </button>
           <button className="btn-secondary" onClick={() => setShowAdd(false)}>
             {t("cancel")}

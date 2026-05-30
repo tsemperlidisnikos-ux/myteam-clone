@@ -22,6 +22,29 @@ const TOKEN_KEY = "auth_token";
 const CLUB_KEY = "club_id";
 const ROLE_KEY = "club_role";
 
+const MOBILE_LABELS = {
+  title: "MyTeam Mobile",
+  email: "Email",
+  password: "Κωδικός",
+  login: "Σύνδεση",
+  logout: "Έξοδος",
+  trainings: "Προπονήσεις",
+  matches: "Αγώνες",
+  attendance: "Παρουσίες",
+  back: "← Πίσω",
+  offline: "Offline",
+  offlineMode: "Λειτουργία offline",
+  pending: "εκκρεμείς παρουσίες",
+  noTrainings: "Δεν υπάρχουν προπονήσεις για αυτή την ομάδα.",
+  noMatches: "Δεν υπάρχουν αγώνες.",
+  noAthletes: "Δεν υπάρχουν αθλητές σε αυτή την ομάδα.",
+  present: "παρών",
+  absent: "απών",
+  late: "αργά",
+  coachOnly: "Το mobile app είναι για admin/coach.",
+  offlineSaved: "Αποθηκεύτηκε offline — θα σταλεί αργότερα",
+};
+
 const MOBILE_ROLES = new Set(["admin", "coach"]);
 
 Notifications.setNotificationHandler({
@@ -236,7 +259,7 @@ export default function App() {
         return;
       }
       if (!MOBILE_ROLES.has(club.role)) {
-        setError("Το mobile app είναι για admin/coach. Χρησιμοποίησε το web.");
+        setError(`${MOBILE_LABELS.coachOnly} Χρησιμοποίησε το web.`);
         return;
       }
       setToken(t);
@@ -378,7 +401,7 @@ export default function App() {
       });
       await saveQueue(queue);
       setPendingCount(queue.length);
-      setError("Αποθηκεύτηκε offline — θα σταλεί αργότερα");
+      setError(MOBILE_LABELS.offlineSaved);
     }
   };
 
@@ -393,10 +416,10 @@ export default function App() {
   if (!token) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>MyTeam Mobile</Text>
+        <Text style={styles.title}>{MOBILE_LABELS.title}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder={MOBILE_LABELS.email}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -404,7 +427,7 @@ export default function App() {
         />
         <TextInput
           style={styles.input}
-          placeholder="Password"
+          placeholder={MOBILE_LABELS.password}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -414,7 +437,7 @@ export default function App() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.btnText}>Login</Text>
+            <Text style={styles.btnText}>{MOBILE_LABELS.login}</Text>
           )}
         </TouchableOpacity>
         <Text style={styles.hint}>API: {API}</Text>
@@ -426,7 +449,7 @@ export default function App() {
     return (
       <SafeAreaView style={styles.container}>
         <TouchableOpacity onPress={() => setSelectedMatch(null)}>
-          <Text style={styles.link}>← Πίσω</Text>
+          <Text style={styles.link}>{MOBILE_LABELS.back}</Text>
         </TouchableOpacity>
         <Text style={styles.title}>vs {selectedMatch.opponent}</Text>
         <ScrollView>
@@ -456,17 +479,17 @@ export default function App() {
     return (
       <SafeAreaView style={styles.container}>
         <TouchableOpacity onPress={() => setSelectedTraining(null)}>
-          <Text style={styles.link}>← Πίσω</Text>
+          <Text style={styles.link}>{MOBILE_LABELS.back}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Παρουσίες</Text>
-        {offline ? <Text style={styles.hint}>Offline mode</Text> : null}
+        <Text style={styles.title}>{MOBILE_LABELS.attendance}</Text>
+        {offline ? <Text style={styles.hint}>{MOBILE_LABELS.offlineMode}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {loading ? (
           <ActivityIndicator size="large" />
         ) : (
           <ScrollView>
             {attendance.length === 0 ? (
-              <Text>Δεν υπάρχουν αθλητές σε αυτή την ομάδα.</Text>
+              <Text>{MOBILE_LABELS.noAthletes}</Text>
             ) : (
               attendance.map((a) => (
                 <View key={a.id} style={styles.row}>
@@ -478,7 +501,7 @@ export default function App() {
                         style={[styles.chip, a.status === s && styles.chipActive]}
                         onPress={() => mark(a.id, s)}
                       >
-                        <Text>{s}</Text>
+                        <Text>{MOBILE_LABELS[s]}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -496,15 +519,17 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>{screen === "trainings" ? "Προπονήσεις" : "Αγώνες"}</Text>
+        <Text style={styles.title}>
+          {screen === "trainings" ? MOBILE_LABELS.trainings : MOBILE_LABELS.matches}
+        </Text>
         <TouchableOpacity onPress={logout}>
-          <Text style={styles.link}>Έξοδος</Text>
+          <Text style={styles.link}>{MOBILE_LABELS.logout}</Text>
         </TouchableOpacity>
       </View>
       {(offline || pendingCount > 0) && (
         <Text style={styles.hint}>
-          {offline ? "Offline" : ""}
-          {pendingCount > 0 ? ` · ${pendingCount} εκκρεμείς παρουσίες` : ""}
+          {offline ? MOBILE_LABELS.offline : ""}
+          {pendingCount > 0 ? ` · ${pendingCount} ${MOBILE_LABELS.pending}` : ""}
         </Text>
       )}
       <View style={styles.tabRow}>
@@ -512,13 +537,13 @@ export default function App() {
           style={[styles.tab, screen === "trainings" && styles.tabActive]}
           onPress={() => setScreen("trainings")}
         >
-          <Text>Προπονήσεις</Text>
+          <Text>{MOBILE_LABELS.trainings}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, screen === "matches" && styles.tabActive]}
           onPress={() => setScreen("matches")}
         >
-          <Text>Αγώνες</Text>
+          <Text>{MOBILE_LABELS.matches}</Text>
         </TouchableOpacity>
       </View>
       {teams.length > 1 && (
@@ -540,7 +565,7 @@ export default function App() {
         <ActivityIndicator size="large" />
       ) : screen === "matches" ? (
         matches.length === 0 ? (
-          <Text>Δεν υπάρχουν αγώνες.</Text>
+          <Text>{MOBILE_LABELS.noMatches}</Text>
         ) : (
           <FlatList
             data={matches}
@@ -558,7 +583,7 @@ export default function App() {
           />
         )
       ) : trainings.length === 0 ? (
-        <Text>Δεν υπάρχουν προπονήσεις για αυτή την ομάδα.</Text>
+        <Text>{MOBILE_LABELS.noTrainings}</Text>
       ) : (
         <FlatList
           data={trainings}

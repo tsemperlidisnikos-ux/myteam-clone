@@ -158,16 +158,16 @@ export default function MatchDetail() {
   };
 
   if (loading) {
-    return <p>Loading match...</p>;
+    return <p>{t("loadingMatch")}</p>;
   }
 
   if (!match) {
     return (
       <div>
         <Link to="/matches" className="page-back">
-          ← Back to Matches
+          {t("backToMatches")}
         </Link>
-        <p>Match not found.</p>
+        <p>{t("matchNotFound")}</p>
       </div>
     );
   }
@@ -178,7 +178,7 @@ export default function MatchDetail() {
   return (
     <div>
       <Link to="/matches" className="page-back">
-        ← Back to Matches
+        {t("backToMatches")}
       </Link>
 
       <div className="page-header">
@@ -189,28 +189,28 @@ export default function MatchDetail() {
 
       <div className="page-panel detail-meta">
         <p>
-          <strong>Date:</strong> {dateStr}
+          <strong>{t("date")}:</strong> {dateStr}
           {match.start_time ? ` · ${match.start_time.slice?.(0, 5) ?? match.start_time}` : ""}
         </p>
         <p>
-          <strong>Competition:</strong> {match.competition || "—"}
+          <strong>{t("competition")}:</strong> {match.competition || "—"}
         </p>
         <p>
-          <strong>Location:</strong> {match.location || "—"}
+          <strong>{t("location")}:</strong> {match.location || "—"}
         </p>
         {match.notes && (
           <p>
-            <strong>Notes:</strong> {match.notes}
+            <strong>{t("notes")}:</strong> {match.notes}
           </p>
         )}
       </div>
 
       <div className="page-panel score-panel">
-        <h2>Score</h2>
+        <h2>{t("scoreLabel")}</h2>
         {isStaff ? (
           <div className="score-form">
             <label>
-              Us
+              {t("us")}
               <input
                 type="number"
                 min="0"
@@ -221,7 +221,7 @@ export default function MatchDetail() {
             </label>
             <span className="score-sep">–</span>
             <label>
-              Them
+              {t("them")}
               <input
                 type="number"
                 min="0"
@@ -233,7 +233,7 @@ export default function MatchDetail() {
               />
             </label>
             <button className="btn-primary" onClick={saveScore}>
-              Update Score
+              {t("updateScore")}
             </button>
           </div>
         ) : (
@@ -244,7 +244,7 @@ export default function MatchDetail() {
       </div>
 
       <div className="page-header" style={{ marginTop: 24 }}>
-        <h2>Player Stats</h2>
+        <h2>{t("playerStats")}</h2>
         <div>
           {rosterIds.length > 0 && (
             <button
@@ -265,7 +265,7 @@ export default function MatchDetail() {
           )}
           {isStaff && rosterIds.length > 0 && (
             <button className="btn-primary" onClick={saveAllStats} disabled={savingAll}>
-              {savingAll ? "Saving..." : "Save All"}
+              {savingAll ? t("saving") : t("saveAllStats")}
             </button>
           )}
         </div>

@@ -4,7 +4,7 @@ import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import Modal from "../components/Modal";
 import { downloadCsv } from "../utils/csv";
-import { t } from "../i18n/el";
+import { t, roleLabel } from "../i18n/el";
 import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
@@ -33,7 +33,7 @@ export default function TeamDetails() {
       setClubAthletes(athletesRes.data);
       setClubUsers(usersRes.data);
     } catch {
-      showToast("Αποτυχία φόρτωσης ομάδας", "error");
+      showToast(t("teamLoadFailed"), "error");
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ export default function TeamDetails() {
   };
 
   const removeAthlete = async (userId) => {
-    if (!window.confirm("Remove this athlete from the team?")) return;
+    if (!window.confirm(t("confirmRemoveAthlete"))) return;
     try {
       const clubId = requireClubId();
       await api.delete(`/teams/${clubId}/${teamId}/athletes/${userId}`);
@@ -91,7 +91,7 @@ export default function TeamDetails() {
   };
 
   const removeCoach = async (userId) => {
-    if (!window.confirm("Remove this coach from the team?")) return;
+    if (!window.confirm(t("confirmRemoveCoach"))) return;
     try {
       const clubId = requireClubId();
       await api.delete(`/teams/${clubId}/${teamId}/coaches/${userId}`);
@@ -102,7 +102,7 @@ export default function TeamDetails() {
   };
 
   if (loading || !data?.team) {
-    return <p>Loading...</p>;
+    return <p>{t("loading")}</p>;
   }
 
   const { team, coaches, athletes } = data;
@@ -124,42 +124,44 @@ export default function TeamDetails() {
   return (
     <div>
       <Link to="/teams" className="page-back">
-        ← Back to Teams
+        {t("backToTeams")}
       </Link>
 
       <div className="page-header">
         <h1>{team.name}</h1>
         <Link to={`/analytics?team=${teamId}`} className="btn-secondary">
-          View Analytics
+          {t("viewAnalytics")}
         </Link>
       </div>
 
       <div className="page-panel detail-meta">
         <p>
-          <strong>Category:</strong> {team.category || "—"}
+          <strong>{t("category")}:</strong> {team.category || "—"}
         </p>
       </div>
 
       <div className="detail-grid">
         <div className="page-panel">
           <div className="section-header">
-            <h2>Coaches ({coaches.length})</h2>
+            <h2>
+              {t("coaches")} ({coaches.length})
+            </h2>
             <button
               className="btn-primary btn-sm"
               onClick={() => setShowAddCoach(true)}
               disabled={availableCoaches.length === 0}
             >
-              + Add Coach
+              + {t("addCoach")}
             </button>
           </div>
           {coaches.length === 0 ? (
-            <p>No coaches assigned.</p>
+            <p>{t("noCoaches")}</p>
           ) : (
             <table className="page-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Email</th>
+                  <th>{t("name")}</th>
+                  <th>{t("email")}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -170,7 +172,7 @@ export default function TeamDetails() {
                     <td>{c.email}</td>
                     <td>
                       <button className="btn-red" onClick={() => removeCoach(c.id)}>
-                        Remove
+                        {t("remove")}
                       </button>
                     </td>
                   </tr>
@@ -182,7 +184,9 @@ export default function TeamDetails() {
 
         <div className="page-panel">
           <div className="section-header">
-            <h2>Roster ({athletes.length})</h2>
+            <h2>
+              {t("roster")} ({athletes.length})
+            </h2>
             <div>
               {athletes.length > 0 && (
                 <button className="btn-secondary btn-sm" onClick={exportRoster} style={{ marginRight: 8 }}>
@@ -194,18 +198,18 @@ export default function TeamDetails() {
                 onClick={() => setShowAddAthlete(true)}
                 disabled={availableAthletes.length === 0}
               >
-                + Add Athlete
+                + {t("addAthlete")}
               </button>
             </div>
           </div>
           {athletes.length === 0 ? (
-            <p>No athletes on this team. Add athletes from your club roster.</p>
+            <p>{t("noAthletesOnTeam")}</p>
           ) : (
             <table className="page-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Email</th>
+                  <th>{t("name")}</th>
+                  <th>{t("email")}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -220,7 +224,7 @@ export default function TeamDetails() {
                     <td>{a.email}</td>
                     <td>
                       <button className="btn-red" onClick={() => removeAthlete(a.id)}>
-                        Remove
+                        {t("remove")}
                       </button>
                     </td>
                   </tr>
@@ -232,9 +236,9 @@ export default function TeamDetails() {
       </div>
 
       {showAddAthlete && (
-        <Modal title="Add Athlete to Team" onClose={() => setShowAddAthlete(false)}>
+        <Modal title={t("addAthleteToTeam")} onClose={() => setShowAddAthlete(false)}>
           {availableAthletes.length === 0 ? (
-            <p>No available athletes. Create athletes first under Athletes.</p>
+            <p>{t("noAvailableAthletes")}</p>
           ) : (
             <>
               <select
@@ -242,7 +246,7 @@ export default function TeamDetails() {
                 value={selectedAthleteId}
                 onChange={(e) => setSelectedAthleteId(e.target.value)}
               >
-                <option value="">Select athlete...</option>
+                <option value="">{t("selectAthlete")}</option>
                 {availableAthletes.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.full_name} {a.position ? `(${a.position})` : ""}
@@ -255,20 +259,20 @@ export default function TeamDetails() {
                 disabled={!selectedAthleteId || busy}
                 style={{ marginRight: 10 }}
               >
-                Add
+                {t("add")}
               </button>
             </>
           )}
           <button className="btn-secondary" onClick={() => setShowAddAthlete(false)}>
-            Cancel
+            {t("cancel")}
           </button>
         </Modal>
       )}
 
       {showAddCoach && (
-        <Modal title="Add Coach to Team" onClose={() => setShowAddCoach(false)}>
+        <Modal title={t("addCoachToTeam")} onClose={() => setShowAddCoach(false)}>
           {availableCoaches.length === 0 ? (
-            <p>No available coaches. Club admins can be assigned as coaches.</p>
+            <p>{t("noAvailableCoachesHint")}</p>
           ) : (
             <>
               <select
@@ -276,10 +280,10 @@ export default function TeamDetails() {
                 value={selectedCoachId}
                 onChange={(e) => setSelectedCoachId(e.target.value)}
               >
-                <option value="">Select coach...</option>
+                <option value="">{t("selectCoach")}</option>
                 {availableCoaches.map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.full_name} ({u.role})
+                    {u.full_name} ({roleLabel(u.role)})
                   </option>
                 ))}
               </select>
@@ -289,12 +293,12 @@ export default function TeamDetails() {
                 disabled={!selectedCoachId || busy}
                 style={{ marginRight: 10 }}
               >
-                Add
+                {t("add")}
               </button>
             </>
           )}
           <button className="btn-secondary" onClick={() => setShowAddCoach(false)}>
-            Cancel
+            {t("cancel")}
           </button>
         </Modal>
       )}

@@ -96,26 +96,26 @@ export default function Analytics() {
         )}
       </div>
 
-      <h2 style={{ marginBottom: 12 }}>Club Overview</h2>
+      <h2 style={{ marginBottom: 12 }}>{t("clubOverview")}</h2>
       {clubStats ? (
         <div className="stat-grid" style={{ marginBottom: 32 }}>
-          <Card label="Athletes" value={clubStats.athletes} />
-          <Card label="Coaches" value={clubStats.coaches} />
-          <Card label="Teams" value={clubStats.teams} />
-          <Card label="Trainings" value={clubStats.trainings} />
-          <Card label="Attendance" value={clubStats.attendance_rate ?? 0} suffix="%" />
-          <Card label="Wins" value={clubStats.wins ?? 0} />
-          <Card label="Losses" value={clubStats.losses ?? 0} />
+          <Card label={t("athletes")} value={clubStats.athletes} />
+          <Card label={t("coaches")} value={clubStats.coaches} />
+          <Card label={t("teams")} value={clubStats.teams} />
+          <Card label={t("trainings")} value={clubStats.trainings} />
+          <Card label={t("attendance")} value={clubStats.attendance_rate ?? 0} suffix="%" />
+          <Card label={t("wins")} value={clubStats.wins ?? 0} />
+          <Card label={t("losses")} value={clubStats.losses ?? 0} />
         </div>
       ) : (
-        <p>Loading club stats...</p>
+        <p>{t("loadingClubStats")}</p>
       )}
 
       <div className="page-header" style={{ marginBottom: 12 }}>
-        <h2>Team Stats</h2>
+        <h2>{t("teamStats")}</h2>
         {teamId && (
           <Link to={`/teams/${teamId}`} className="btn-secondary">
-            Open Team
+            {t("openTeam")}
           </Link>
         )}
       </div>
@@ -128,11 +128,11 @@ export default function Analytics() {
           disabled={teamsLoading}
         >
           {teams.length === 0 ? (
-            <option value="">No teams</option>
+            <option value="">{t("noTeams")}</option>
           ) : (
-            teams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
+            teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
               </option>
             ))
           )}
@@ -149,20 +149,20 @@ export default function Analytics() {
           )}
 
           <div className="stat-grid" style={{ marginBottom: 20 }}>
-            <Card label="Roster" value={teamStats.roster_size ?? 0} />
-            <Card label="Trainings" value={teamStats.trainings ?? 0} />
-            <Card label="Attendance" value={teamStats.attendance_rate ?? 0} suffix="%" />
-            <Card label="Wins" value={teamStats.wins ?? 0} />
-            <Card label="Losses" value={teamStats.losses ?? 0} />
-            <Card label="Avg Points" value={Number(teamStats.averages?.avg_points ?? 0).toFixed(1)} />
-            <Card label="Avg Rebounds" value={Number(teamStats.averages?.avg_rebounds ?? 0).toFixed(1)} />
-            <Card label="Avg Assists" value={Number(teamStats.averages?.avg_assists ?? 0).toFixed(1)} />
+            <Card label={t("roster")} value={teamStats.roster_size ?? 0} />
+            <Card label={t("trainings")} value={teamStats.trainings ?? 0} />
+            <Card label={t("attendance")} value={teamStats.attendance_rate ?? 0} suffix="%" />
+            <Card label={t("wins")} value={teamStats.wins ?? 0} />
+            <Card label={t("losses")} value={teamStats.losses ?? 0} />
+            <Card label={t("avgPoints")} value={Number(teamStats.averages?.avg_points ?? 0).toFixed(1)} />
+            <Card label={t("avgRebounds")} value={Number(teamStats.averages?.avg_rebounds ?? 0).toFixed(1)} />
+            <Card label={t("avgAssists")} value={Number(teamStats.averages?.avg_assists ?? 0).toFixed(1)} />
           </div>
 
           {teamStats.top_scorers?.length > 0 ? (
             <div className="page-panel">
               <div className="section-header">
-                <h3>Top Scorers</h3>
+                <h3>{t("topScorers")}</h3>
                 <button className="btn-secondary btn-sm" onClick={exportScorersCsv}>
                   {t("export")}
                 </button>
@@ -170,7 +170,7 @@ export default function Analytics() {
               <table className="page-table">
                 <thead>
                   <tr>
-                    <th>Player</th>
+                    <th>{t("player")}</th>
                     <th>PPG</th>
                   </tr>
                 </thead>
@@ -194,15 +194,15 @@ export default function Analytics() {
             </div>
           ) : (
             <div className="page-panel">
-              <p>No match stats yet. Add matches and player stats to see top scorers.</p>
+              <p>{t("noMatchStatsYet")}</p>
             </div>
           )}
 
           <div className="detail-grid" style={{ marginTop: 20 }}>
             <div className="page-panel">
-              <h3>Attendance Trend (monthly)</h3>
+              <h3>{t("attendanceTrend")}</h3>
               {trainingTrend.length === 0 ? (
-                <p>No attendance data yet.</p>
+                <p>{t("noAttendanceData")}</p>
               ) : (
                 <ul className="trend-list">
                   {trainingTrend.map((row) => (
@@ -227,9 +227,9 @@ export default function Analytics() {
             </div>
 
             <div className="page-panel">
-              <h3>Match Scores</h3>
+              <h3>{t("matchScores")}</h3>
               {matchTrend.length === 0 ? (
-                <p>No match results yet.</p>
+                <p>{t("noMatchResults")}</p>
               ) : (
                 <ul className="trend-list">
                   {matchTrend.map((row, i) => (
@@ -254,7 +254,7 @@ export default function Analytics() {
           </div>
         </>
       ) : (
-        <p>{teams.length === 0 ? "Create a team first." : "Select a team to view stats."}</p>
+        <p>{teams.length === 0 ? t("createTeamFirst") : t("selectTeamStats")}</p>
       )}
     </div>
   );

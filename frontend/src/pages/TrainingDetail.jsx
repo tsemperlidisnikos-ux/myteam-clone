@@ -10,6 +10,11 @@ import { t } from "../i18n/el";
 import "../styles/page.css";
 
 const STATUSES = ["present", "absent", "late"];
+const STATUS_LABELS = {
+  present: "statusPresent",
+  absent: "statusAbsent",
+  late: "statusLate",
+};
 
 export default function TrainingDetail() {
   const { trainingId } = useParams();
@@ -104,48 +109,50 @@ export default function TrainingDetail() {
   return (
     <div>
       <Link to="/trainings" className="page-back">
-        ← Back to Trainings
+        {t("backToTrainings")}
       </Link>
 
       <div className="page-header">
-        <h1>Training — {dateStr}</h1>
+        <h1>
+          {t("trainingTitle")} — {dateStr}
+        </h1>
       </div>
 
       <div className="page-panel detail-meta">
         <p>
-          <strong>Time:</strong> {training.start_time?.slice?.(0, 5)} –{" "}
+          <strong>{t("time")}:</strong> {training.start_time?.slice?.(0, 5)} –{" "}
           {training.end_time?.slice?.(0, 5)}
         </p>
         <p>
-          <strong>Location:</strong> {training.location || "—"}
+          <strong>{t("location")}:</strong> {training.location || "—"}
         </p>
         <p>
-          <strong>Coach:</strong> {training.coach_name}
+          <strong>{t("coach")}:</strong> {training.coach_name}
         </p>
         {training.notes && (
           <p>
-            <strong>Notes:</strong> {training.notes}
+            <strong>{t("notes")}:</strong> {training.notes}
           </p>
         )}
       </div>
 
       <div className="page-header" style={{ marginTop: 24 }}>
-        <h2>Exercises</h2>
+        <h2>{t("exercises")}</h2>
         <button className="btn-primary btn-sm" onClick={() => setShowAddExercise(true)}>
-          + Add Exercise
+          + {t("addExercise")}
         </button>
       </div>
 
       <div className="page-panel" style={{ marginBottom: 24 }}>
         {exercises.length === 0 ? (
-          <p>No exercises planned.</p>
+          <p>{t("noExercises")}</p>
         ) : (
           <table className="page-table">
             <thead>
               <tr>
-                <th>Title</th>
-                <th>Duration</th>
-                <th>Description</th>
+                <th>{t("titleCol")}</th>
+                <th>{t("durationCol")}</th>
+                <th>{t("descriptionCol")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -157,7 +164,7 @@ export default function TrainingDetail() {
                   <td>{ex.description || "—"}</td>
                   <td>
                     <button className="btn-red" onClick={() => removeExercise(ex.id)}>
-                      Delete
+                      {t("delete")}
                     </button>
                   </td>
                 </tr>
@@ -168,7 +175,7 @@ export default function TrainingDetail() {
       </div>
 
       <div className="page-header" style={{ marginTop: 24 }}>
-        <h2>Παρουσίες</h2>
+        <h2>{t("attendance")}</h2>
         {attendance.length > 0 && (
           <button
             className="btn-secondary btn-sm"
@@ -211,7 +218,9 @@ export default function TrainingDetail() {
                     </Link>
                   </td>
                   <td>
-                    <span className={`status-badge status-${a.status}`}>{a.status}</span>
+                    <span className={`status-badge status-${a.status}`}>
+                      {t(STATUS_LABELS[a.status] || a.status)}
+                    </span>
                   </td>
                   <td className="attendance-actions">
                     {isStaff ? (
@@ -225,7 +234,7 @@ export default function TrainingDetail() {
                           disabled={saving === a.id}
                           onClick={() => markAttendance(a.id, s)}
                         >
-                          {s}
+                          {t(STATUS_LABELS[s])}
                         </button>
                       ))
                     ) : (
@@ -240,10 +249,10 @@ export default function TrainingDetail() {
       </div>
 
       {showAddExercise && (
-        <Modal title="Add Exercise" onClose={() => setShowAddExercise(false)}>
+        <Modal title={t("addExercise")} onClose={() => setShowAddExercise(false)}>
           <input
             className="modal-field"
-            placeholder="Title (e.g. Shooting drills)"
+            placeholder={t("exerciseTitlePlaceholder")}
             value={exerciseForm.title}
             onChange={(e) => setExerciseForm({ ...exerciseForm, title: e.target.value })}
           />
@@ -251,7 +260,7 @@ export default function TrainingDetail() {
             type="number"
             min="1"
             className="modal-field"
-            placeholder="Duration (minutes)"
+            placeholder={t("durationPlaceholder")}
             value={exerciseForm.duration_minutes}
             onChange={(e) =>
               setExerciseForm({ ...exerciseForm, duration_minutes: e.target.value })
@@ -260,17 +269,17 @@ export default function TrainingDetail() {
           <textarea
             className="modal-field"
             rows={3}
-            placeholder="Description"
+            placeholder={t("descriptionCol")}
             value={exerciseForm.description}
             onChange={(e) =>
               setExerciseForm({ ...exerciseForm, description: e.target.value })
             }
           />
           <button className="btn-primary" onClick={addExercise} style={{ marginRight: 10 }}>
-            Add
+            {t("add")}
           </button>
           <button className="btn-secondary" onClick={() => setShowAddExercise(false)}>
-            Cancel
+            {t("cancel")}
           </button>
         </Modal>
       )}

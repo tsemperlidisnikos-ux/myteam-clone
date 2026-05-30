@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId } from "../utils/club";
 import useClubRole from "../hooks/useClubRole";
-import { t } from "../i18n/el";
+import { t, roleLabel } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Settings() {
@@ -21,11 +21,11 @@ export default function Settings() {
     setError("");
 
     if (newPassword.length < 6) {
-      setError("New password must be at least 6 characters");
+      setError(t("passwordMin6"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("passwordsNoMatch"));
       return;
     }
 
@@ -35,12 +35,12 @@ export default function Settings() {
         current_password: currentPassword,
         new_password: newPassword,
       });
-      setMessage("Password updated successfully");
+      setMessage(t("passwordUpdated"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to change password");
+      setError(err.response?.data?.error || t("failedChangePassword"));
     } finally {
       setSaving(false);
     }
@@ -49,18 +49,18 @@ export default function Settings() {
   return (
     <div>
       <div className="page-header">
-        <h1>Settings</h1>
+        <h1>{t("settings")}</h1>
       </div>
 
       <div className="page-panel" style={{ maxWidth: 420, marginBottom: 20 }}>
-        <h2>Account</h2>
+        <h2>{t("account")}</h2>
         <p>
-          <strong>Role:</strong>{" "}
-          {ready ? role || "unknown — try logging out and back in" : "loading…"}
+          <strong>{t("role")}:</strong>{" "}
+          {ready ? roleLabel(role) || t("roleUnknown") : t("loading")}
         </p>
         {ready && isAdmin && (
           <Link to="/staff" className="btn-primary" style={{ display: "inline-block", marginTop: 12 }}>
-            Manage Staff → Add Coach
+            {t("manageStaff")} →
           </Link>
         )}
       </div>
@@ -77,18 +77,18 @@ export default function Settings() {
                 const res = await api.post(`/billing/${clubId}/checkout`);
                 if (res.data.url) window.location.href = res.data.url;
               } catch (err) {
-                setError(err.response?.data?.error || "Billing failed");
+                setError(err.response?.data?.error || t("billingFailed"));
               }
             }}
           >
-            Upgrade to Pro
+            {t("upgradePro")}
           </button>
         </div>
       )}
 
       {ready && isAdmin && (
         <div className="page-panel" style={{ maxWidth: 420, marginBottom: 20 }}>
-          <h2>Club Logo</h2>
+          <h2>{t("clubLogo")}</h2>
           <input
             type="file"
             accept="image/*"
@@ -102,9 +102,9 @@ export default function Settings() {
                 await api.post(`/clubs/${clubId}/logo`, fd, {
                   headers: { "Content-Type": "multipart/form-data" },
                 });
-                setMessage("Logo uploaded");
+                setMessage(t("logoUploaded"));
               } catch {
-                setError("Logo upload failed");
+                setError(t("logoUploadFailed"));
               }
             }}
           />
@@ -112,12 +112,12 @@ export default function Settings() {
       )}
 
       <div className="page-panel" style={{ maxWidth: 420 }}>
-        <h2>Change Password</h2>
+        <h2>{t("changePassword")}</h2>
         <form onSubmit={submit}>
           <input
             type="password"
             className="modal-field"
-            placeholder="Current password"
+            placeholder={t("currentPassword")}
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             required
@@ -125,7 +125,7 @@ export default function Settings() {
           <input
             type="password"
             className="modal-field"
-            placeholder="New password"
+            placeholder={t("newPassword")}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
@@ -133,7 +133,7 @@ export default function Settings() {
           <input
             type="password"
             className="modal-field"
-            placeholder="Confirm new password"
+            placeholder={t("confirmPassword")}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
@@ -141,7 +141,7 @@ export default function Settings() {
           {error && <p className="form-error">{error}</p>}
           {message && <p className="form-success">{message}</p>}
           <button type="submit" className="btn-primary" disabled={saving}>
-            {saving ? "Saving..." : "Update Password"}
+            {saving ? t("saving") : t("updatePassword")}
           </button>
         </form>
       </div>
