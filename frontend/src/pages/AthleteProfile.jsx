@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../api/axios";
 import { requireClubId } from "../utils/club";
+import useClubRole from "../hooks/useClubRole";
+import { t } from "../i18n/el";
 import { showToast } from "../utils/toast";
 import "../styles/page.css";
 
@@ -19,6 +21,7 @@ const emptyForm = {
 
 export default function AthleteProfile() {
   const { athleteId } = useParams();
+  const { isParent, isStaff } = useClubRole();
   const [profile, setProfile] = useState(null);
   const [teams, setTeams] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -139,17 +142,17 @@ export default function AthleteProfile() {
 
   return (
     <div>
-      <Link to="/athletes" className="page-back">
-        ← Back to Athletes
+      <Link to={isStaff ? "/athletes" : "/dashboard"} className="page-back">
+        ← {isStaff ? "Back to Athletes" : t("dashboard")}
       </Link>
 
       <div className="page-header">
         <h1>{profile.full_name}</h1>
-        {!editing ? (
+        {!editing && !isParent ? (
           <button className="btn-primary" onClick={() => setEditing(true)}>
             Edit Profile
           </button>
-        ) : (
+        ) : editing ? (
           <div>
             <button className="btn-primary" onClick={save} disabled={saving} style={{ marginRight: 10 }}>
               {saving ? "Saving..." : "Save"}
@@ -164,7 +167,7 @@ export default function AthleteProfile() {
               Cancel
             </button>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="detail-grid">

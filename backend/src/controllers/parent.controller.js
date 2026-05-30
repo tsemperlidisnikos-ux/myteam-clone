@@ -16,7 +16,7 @@ export const getMyChildren = async (req, res) => {
   }
 
   const result = await pool.query(
-    `SELECT DISTINCT ap.id, u.full_name, ap.date_of_birth, ap.position,
+    `SELECT DISTINCT ap.id, ap.user_id AS athlete_user_id, u.full_name, ap.date_of_birth, ap.position,
             tm.name AS team_name, tm.id AS team_id
      FROM parent_athletes pa
      JOIN athlete_profiles ap ON ap.id = pa.athlete_id
@@ -79,6 +79,7 @@ export const listParentLinks = async (req, res) => {
   const { clubId } = req.params;
   const result = await pool.query(
     `SELECT pa.id, pa.user_id, pa.athlete_id,
+            ap.user_id AS athlete_user_id,
             pu.full_name AS parent_name, pu.email AS parent_email,
             au.full_name AS athlete_name
      FROM parent_athletes pa

@@ -65,6 +65,22 @@ export const el = {
   noChildren: "Δεν υπάρχουν συνδεδεμένα παιδιά.",
   selectChild: "Επίλεξε παιδί για προπονήσεις και αγώνες.",
   offlineQueued: "Αποθηκεύτηκε offline — θα σταλεί όταν επανέλθει η σύνδεση",
+  newTraining: "Νέα προπόνηση",
+  newMatch: "Νέος αγώνας",
+  noTeamsYet: "Δεν υπάρχουν ομάδες — δημιούργησε πρώτα",
+  noTrainingsTeam: "Δεν υπάρχουν προπονήσεις.",
+  noMatchesTeam: "Δεν υπάρχουν αγώνες.",
+  date: "Ημερομηνία",
+  time: "Ώρα",
+  location: "Τοποθεσία",
+  coach: "Προπονητής",
+  notes: "Σημειώσεις",
+  attendance: "Παρουσίες",
+  opponent: "Αντίπαλος",
+  competition: "Διοργάνωση",
+  score: "Σκορ",
+  statsScore: "Στατιστικά",
+  accessDenied: "Δεν έχεις πρόσβαση σε αυτό το προφίλ",
 };
 
 export function t(key) {

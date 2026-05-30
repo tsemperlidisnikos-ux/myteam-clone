@@ -7,6 +7,7 @@ import useClubRole from "../hooks/useClubRole";
 import { loadParentMatches } from "../utils/parentData";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
+import { t } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Matches() {
@@ -43,7 +44,7 @@ export default function Matches() {
       const res = await api.get(`/matches/${clubId}?team_id=${selectedTeamId}`);
       setMatches(res.data);
     } catch {
-      showToast("Failed to load matches", "error");
+      showToast("Αποτυχία φόρτωσης αγώνων", "error");
     }
   };
 
@@ -72,7 +73,7 @@ export default function Matches() {
       setForm({ opponent: "", date: "", start_time: "", location: "", competition: "", notes: "" });
       loadMatches(teamId);
     } catch {
-      showToast("Failed to create match", "error");
+      showToast("Αποτυχία δημιουργίας αγώνα", "error");
     }
   };
 
@@ -84,10 +85,10 @@ export default function Matches() {
   return (
     <div>
       <div className="page-header">
-        <h1>Matches</h1>
+        <h1>{t("matches")}</h1>
         {isStaff && (
           <button className="btn-primary" onClick={() => setShowAdd(true)} disabled={!teamId}>
-            + New Match
+            + {t("newMatch")}
           </button>
         )}
       </div>
@@ -101,11 +102,11 @@ export default function Matches() {
           disabled={teamsLoading}
         >
           {teams.length === 0 ? (
-            <option value="">No teams — create one first</option>
+            <option value="">{t("noTeamsYet")}</option>
           ) : (
-            teams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
+            teams.map((tm) => (
+              <option key={tm.id} value={tm.id}>
+                {tm.name}
               </option>
             ))
           )}
@@ -115,16 +116,16 @@ export default function Matches() {
 
       <div className="page-panel">
         {matches.length === 0 ? (
-          <p>No matches for this team.</p>
+          <p>{t("noMatchesTeam")}</p>
         ) : (
           <table className="page-table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Opponent</th>
-                <th>Competition</th>
-                <th>Location</th>
-                <th>Score</th>
+                <th>{t("date")}</th>
+                <th>{t("opponent")}</th>
+                <th>{t("competition")}</th>
+                <th>{t("location")}</th>
+                <th>{t("score")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -139,7 +140,7 @@ export default function Matches() {
                   {!isParent && (
                     <td className="actions-cell">
                       <Link to={`/matches/${m.id}`} className="btn-blue btn-link-action">
-                        Stats & Score
+                        {t("statsScore")}
                       </Link>
                     </td>
                   )}
@@ -151,15 +152,15 @@ export default function Matches() {
       </div>
 
       {showAdd && (
-        <Modal title="New Match" onClose={() => setShowAdd(false)}>
-          <input placeholder="Opponent" className="modal-field" value={form.opponent} onChange={(e) => setForm({ ...form, opponent: e.target.value })} />
+        <Modal title={t("newMatch")} onClose={() => setShowAdd(false)}>
+          <input placeholder={t("opponent")} className="modal-field" value={form.opponent} onChange={(e) => setForm({ ...form, opponent: e.target.value })} />
           <input type="date" className="modal-field" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
           <input type="time" className="modal-field" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} />
-          <input placeholder="Location" className="modal-field" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-          <input placeholder="Competition" className="modal-field" value={form.competition} onChange={(e) => setForm({ ...form, competition: e.target.value })} />
-          <textarea placeholder="Notes" className="modal-field" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-          <button className="btn-primary" onClick={createMatch} style={{ marginRight: 10 }}>Save</button>
-          <button className="btn-secondary" onClick={() => setShowAdd(false)}>Cancel</button>
+          <input placeholder={t("location")} className="modal-field" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+          <input placeholder={t("competition")} className="modal-field" value={form.competition} onChange={(e) => setForm({ ...form, competition: e.target.value })} />
+          <textarea placeholder={t("notes")} className="modal-field" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          <button className="btn-primary" onClick={createMatch} style={{ marginRight: 10 }}>{t("save")}</button>
+          <button className="btn-secondary" onClick={() => setShowAdd(false)}>{t("cancel")}</button>
         </Modal>
       )}
     </div>

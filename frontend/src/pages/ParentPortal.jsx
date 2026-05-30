@@ -47,7 +47,7 @@ export default function ParentPortal() {
                   <td>{l.parent_name}</td>
                   <td>{l.parent_email}</td>
                   <td>
-                    <Link to={`/athletes/${l.athlete_id}`} className="page-link">
+                    <Link to={`/athletes/${l.athlete_user_id}`} className="page-link">
                       {l.athlete_name}
                     </Link>
                   </td>

@@ -23,7 +23,7 @@ router.use(authMiddleware);
 router.use("/:clubId", clubAccessMiddleware);
 
 // GET /athletes/:clubId
-router.get("/:clubId", getAthletes);
+router.get("/:clubId", staffOnly, getAthletes);
 router.get("/:clubId/me", getMyAthleteProfile);
 router.get("/:clubId/medical", staffOnly, getMedicalOverview);
 

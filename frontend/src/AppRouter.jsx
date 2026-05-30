@@ -29,6 +29,7 @@ import MainLayout from "./layout/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import StaffRoute from "./components/StaffRoute";
+import AthleteProfileRoute from "./components/AthleteProfileRoute";
 import ToastContainer from "./components/ToastContainer";
 import { ThemeProvider } from "./hooks/useTheme.jsx";
 
@@ -66,6 +67,14 @@ function withAdminLayout(Page) {
   );
 }
 
+function AthleteProfilePage() {
+  return (
+    <AthleteProfileRoute>
+      <AthleteProfile />
+    </AthleteProfileRoute>
+  );
+}
+
 export default function AppRouter() {
   return (
     <ThemeProvider>
@@ -84,7 +93,7 @@ export default function AppRouter() {
           <Route path="/teams" element={withStaffLayout(Teams)} />
           <Route path="/teams/:teamId" element={withStaffLayout(TeamDetails)} />
           <Route path="/athletes" element={withStaffLayout(Athletes)} />
-          <Route path="/athletes/:athleteId" element={withLayout(AthleteProfile)} />
+          <Route path="/athletes/:athleteId" element={withLayout(AthleteProfilePage)} />
           <Route path="/trainings" element={withLayout(Trainings)} />
           <Route path="/trainings/:trainingId" element={withLayout(TrainingDetail)} />
           <Route path="/settings" element={withLayout(Settings)} />

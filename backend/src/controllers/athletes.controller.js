@@ -1,6 +1,24 @@
 import bcrypt from "bcrypt";
 import { pool } from "../db/pool.js";
 
+async function canAccessAthlete(req, clubId, athleteUserId) {
+  const role = req.user.role;
+  const myId = req.user.user_id;
+
+  if (role === "admin" || role === "coach") return true;
+  if (role === "athlete" && Number(athleteUserId) === myId) return true;
+  if (role === "parent") {
+    const link = await pool.query(
+      `SELECT 1 FROM parent_athletes pa
+       JOIN athlete_profiles ap ON ap.id = pa.athlete_id
+       WHERE pa.user_id = $1 AND pa.club_id = $2 AND ap.user_id = $3`,
+      [myId, clubId, athleteUserId]
+    );
+    return link.rows.length > 0;
+  }
+  return false;
+}
+
 // GET all athletes in a club
 export const getAthletes = async (req, res) => {
   const { clubId } = req.params;
@@ -94,6 +112,10 @@ export const createAthlete = async (req, res) => {
 export const getAthleteProfile = async (req, res) => {
   const { clubId, athleteId } = req.params;
 
+  if (!(await canAccessAthlete(req, clubId, athleteId))) {
+    return res.status(403).json({ error: "Access denied" });
+  }
+
   const membership = await pool.query(
     `SELECT 1 FROM club_users
      WHERE club_id = $1 AND user_id = $2 AND role = 'athlete'`,
@@ -126,6 +148,12 @@ export const updateAthleteProfile = async (req, res) => {
 
   if (role === "athlete" && Number(athleteId) !== myId) {
     return res.status(403).json({ error: "You can only edit your own profile" });
+  }
+  if (role === "parent") {
+    return res.status(403).json({ error: "Read-only access" });
+  }
+  if (!(await canAccessAthlete(req, clubId, athleteId))) {
+    return res.status(403).json({ error: "Access denied" });
   }
   const {
     full_name,
@@ -199,7 +227,11 @@ export const updateAthleteProfile = async (req, res) => {
 
 // GET athlete teams
 export const getAthleteTeams = async (req, res) => {
-  const { athleteId } = req.params;
+  const { clubId, athleteId } = req.params;
+
+  if (!(await canAccessAthlete(req, clubId, athleteId))) {
+    return res.status(403).json({ error: "Access denied" });
+  }
 
   const result = await pool.query(
     `SELECT t.id, t.name, t.category

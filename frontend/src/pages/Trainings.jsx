@@ -7,6 +7,7 @@ import useClubRole from "../hooks/useClubRole";
 import { loadParentTrainings } from "../utils/parentData";
 import Modal from "../components/Modal";
 import { showToast } from "../utils/toast";
+import { t } from "../i18n/el";
 import "../styles/page.css";
 
 export default function Trainings() {
@@ -78,10 +79,10 @@ export default function Trainings() {
   return (
     <div>
       <div className="page-header">
-        <h1>Trainings</h1>
+        <h1>{t("trainings")}</h1>
         {isStaff && (
           <button className="btn-primary" onClick={() => setShowAdd(true)} disabled={!teamId}>
-            + New Training
+            + {t("newTraining")}
           </button>
         )}
       </div>
@@ -95,11 +96,11 @@ export default function Trainings() {
           disabled={teamsLoading}
         >
           {teams.length === 0 ? (
-            <option value="">No teams — create one first</option>
+            <option value="">{t("noTeamsYet")}</option>
           ) : (
-            teams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
+            teams.map((tm) => (
+              <option key={tm.id} value={tm.id}>
+                {tm.name}
               </option>
             ))
           )}
@@ -109,33 +110,33 @@ export default function Trainings() {
 
       <div className="page-panel">
         {trainings.length === 0 ? (
-          <p>No trainings for this team.</p>
+          <p>{t("noTrainingsTeam")}</p>
         ) : (
           <table className="page-table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Location</th>
-                <th>Coach</th>
-                <th>Notes</th>
+                <th>{t("date")}</th>
+                <th>{t("time")}</th>
+                <th>{t("location")}</th>
+                <th>{t("coach")}</th>
+                <th>{t("notes")}</th>
               </tr>
             </thead>
             <tbody>
-              {trainings.map((t) => (
-                <tr key={t.id}>
-                  <td>{t.date?.slice?.(0, 10) ?? t.date}</td>
+              {trainings.map((tr) => (
+                <tr key={tr.id}>
+                  <td>{tr.date?.slice?.(0, 10) ?? tr.date}</td>
                   <td>
-                    {t.start_time?.slice?.(0, 5) ?? t.start_time} –{" "}
-                    {t.end_time?.slice?.(0, 5) ?? t.end_time}
+                    {tr.start_time?.slice?.(0, 5) ?? tr.start_time} –{" "}
+                    {tr.end_time?.slice?.(0, 5) ?? tr.end_time}
                   </td>
-                  <td>{t.location || "—"}</td>
-                  <td>{t.coach_name}</td>
-                  <td>{t.notes || "—"}</td>
+                  <td>{tr.location || "—"}</td>
+                  <td>{tr.coach_name}</td>
+                  <td>{tr.notes || "—"}</td>
                   {!isParent && (
                     <td>
-                      <Link to={`/trainings/${t.id}`} className="btn-blue">
-                        Attendance
+                      <Link to={`/trainings/${tr.id}`} className="btn-blue">
+                        {t("attendance")}
                       </Link>
                     </td>
                   )}
@@ -147,14 +148,14 @@ export default function Trainings() {
       </div>
 
       {showAdd && (
-        <Modal title="New Training" onClose={() => setShowAdd(false)}>
+        <Modal title={t("newTraining")} onClose={() => setShowAdd(false)}>
           <input type="date" className="modal-field" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
           <input type="time" className="modal-field" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} />
           <input type="time" className="modal-field" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
-          <input placeholder="Location" className="modal-field" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-          <textarea placeholder="Notes" className="modal-field" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-          <button className="btn-primary" onClick={createTraining} style={{ marginRight: 10 }}>Save</button>
-          <button className="btn-secondary" onClick={() => setShowAdd(false)}>Cancel</button>
+          <input placeholder={t("location")} className="modal-field" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+          <textarea placeholder={t("notes")} className="modal-field" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          <button className="btn-primary" onClick={createTraining} style={{ marginRight: 10 }}>{t("save")}</button>
+          <button className="btn-secondary" onClick={() => setShowAdd(false)}>{t("cancel")}</button>
         </Modal>
       )}
     </div>
