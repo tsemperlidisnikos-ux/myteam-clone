@@ -45,7 +45,22 @@ deploy.bat
 
 ---
 
-## Recommended production stack
+## Live (Vercel — deployed)
+
+| | URL |
+|---|-----|
+| **Web** | https://frontend-nine-zeta-f5xz9ekez5.vercel.app |
+| **API** | https://backend-sigma-six-35.vercel.app |
+
+> Χρειάζεται μόνο **DATABASE_URL** — τρέξε `finish-db.bat` (Neon) ή Render deploy button.
+
+```bat
+finish-db.bat
+REM μετά copy DATABASE_URL:
+powershell -File scripts\finish-deploy.ps1 -DatabaseUrl "postgres://..."
+```
+
+---
 
 | Service | Provider | Purpose |
 |---------|----------|---------|
