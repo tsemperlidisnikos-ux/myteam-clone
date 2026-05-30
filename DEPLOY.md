@@ -15,8 +15,9 @@ stop.bat           REM Stop
 
 ## GitHub Push + CI
 
+Repo: **https://github.com/tsemperlidisnikos-ux/myteam-clone**
+
 ```bat
-git remote add origin https://github.com/YOUR_USER/myteam-clone.git
 push-github.bat
 ```
 
@@ -24,6 +25,23 @@ GitHub Actions (`.github/workflows/ci.yml`) τρέχει:
 - backend tests + migrate
 - frontend build
 - Playwright E2E (με `npm run seed:ci`)
+
+---
+
+## Γρήγορο cloud deploy (1 κλικ)
+
+```bat
+deploy.bat
+```
+
+Ανοίγει Neon + Railway + Vercel με το repo σου ήδη συνδεδεμένο. Μετά:
+
+1. **Neon** → δημιούργησε DB → copy `DATABASE_URL`
+2. **Railway** → import GitHub repo → **Root: `backend/`** → βάλε env vars
+3. **Vercel** → import repo → **Root: `frontend/`** → `VITE_API_URL` = Railway URL
+4. **Railway** → `FRONTEND_URL` = Vercel URL → redeploy
+
+Για GitHub Actions deploy (optional): πρόσθεσε secrets `RAILWAY_TOKEN`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `VITE_API_URL` → τρέξε workflow **Deploy**.
 
 ---
 
